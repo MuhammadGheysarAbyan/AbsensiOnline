@@ -1,0 +1,3800 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AbsensiQR — Sistem Absensi Modern</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f3ef;
+      --surface: #fff;
+      --surface2: #f9f8f5;
+      --border: #e8e5de;
+      --text: #1a1814;
+      --text2: #6b6560;
+      --text3: #9e9890;
+      --accent: #2d5be3;
+      --accent2: #1a3fc4;
+      --accent-light: #eef1fd;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, .07);
+      --shadow-lg: 0 12px 48px rgba(0, 0, 0, .12);
+      --tr: 0.22s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f0e0c;
+      --surface: #1c1a17;
+      --surface2: #252320;
+      --border: #2e2b26;
+      --text: #f0ede6;
+      --text2: #a09890;
+      --text3: #6b6358;
+      --accent: #4f7eff;
+      --accent2: #6b95ff;
+      --accent-light: #1a2340;
+      --success-light: #0a2015;
+      --warning-light: #1f1400;
+      --danger-light: #200a0a;
+      --shadow: 0 4px 24px rgba(0, 0, 0, .3);
+      --shadow-lg: 0 12px 48px rgba(0, 0, 0, .5);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background var(--tr), color var(--tr)
+    }
+
+    /* AUTH */
+    .auth-wrap {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg)
+    }
+
+    .auth-art {
+      background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a3fc4, #2d5be3, #5b8bff);
+      background-size: 600% 600%;
+      animation: gradShift 12s ease infinite;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px;
+      position: relative;
+      overflow: hidden
+    }
+
+    @keyframes gradShift {
+      0% {
+        background-position: 0% 50%
+      }
+
+      50% {
+        background-position: 100% 50%
+      }
+
+      100% {
+        background-position: 0% 50%
+      }
+    }
+
+    .auth-art::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .07);
+      top: -150px;
+      right: -150px;
+      animation: orbFloat 8s ease-in-out infinite
+    }
+
+    .auth-art::after {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .05);
+      bottom: -80px;
+      left: -80px;
+      animation: orbFloat 6s ease-in-out infinite reverse
+    }
+
+    @keyframes orbFloat {
+
+      0%,
+      100% {
+        transform: translate(0, 0) scale(1)
+      }
+
+      25% {
+        transform: translate(30px, -20px) scale(1.05)
+      }
+
+      50% {
+        transform: translate(-10px, 30px) scale(.95)
+      }
+
+      75% {
+        transform: translate(-30px, -10px) scale(1.02)
+      }
+    }
+
+    .auth-logo-big {
+      font-family: 'Syne', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+      z-index: 1;
+      text-shadow: 0 4px 30px rgba(0, 0, 0, .3)
+    }
+
+    .auth-logo-big span {
+      color: rgba(255, 255, 255, .5)
+    }
+
+    .auth-tagline {
+      color: rgba(255, 255, 255, .75);
+      font-size: 17px;
+      margin-top: 16px;
+      z-index: 1;
+      text-align: center;
+      max-width: 300px;
+      line-height: 1.6
+    }
+
+    .auth-qr-art {
+      margin-top: 48px;
+      background: rgba(255, 255, 255, .95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 28px;
+      z-index: 1;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+      animation: float 3s ease-in-out infinite
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-10px)
+      }
+    }
+
+    .auth-form-side {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 80px;
+      position: relative
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-lg)
+    }
+
+    [data-theme="dark"] .auth-card {
+      background: rgba(28, 26, 23, .85)
+    }
+
+    .auth-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px
+    }
+
+    .auth-sub {
+      color: var(--text2);
+      margin-bottom: 36px;
+      font-size: 15px
+    }
+
+    .form-group {
+      margin-bottom: 18px
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 7px
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 13px 17px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--tr), box-shadow var(--tr)
+    }
+
+    .form-control:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light)
+    }
+
+    .form-control::placeholder {
+      color: var(--text3)
+    }
+
+    select.form-control {
+      cursor: pointer
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 22px;
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all var(--tr);
+      text-decoration: none;
+      white-space: nowrap
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%
+    }
+
+    .btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(45, 91, 227, .35)
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1.5px solid var(--accent)
+    }
+
+    .btn-outline:hover {
+      background: var(--accent-light)
+    }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1.5px solid var(--border)
+    }
+
+    .btn-ghost:hover {
+      background: var(--border)
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff
+    }
+
+    .btn-success:hover {
+      background: #15803d;
+      transform: translateY(-1px)
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c
+    }
+
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 13px;
+      border-radius: 8px;
+      width: auto
+    }
+
+    .auth-toggle {
+      text-align: center;
+      margin-top: 22px;
+      color: var(--text2);
+      font-size: 14px
+    }
+
+    .auth-toggle a {
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none
+    }
+
+    .auth-toggle a:hover {
+      text-decoration: underline
+    }
+
+    /* APP SHELL */
+    .app-shell {
+      display: none;
+      min-height: 100vh
+    }
+
+    .app-shell.active {
+      display: flex
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 255px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      transition: transform var(--tr), background var(--tr)
+    }
+
+    .sidebar-logo {
+      padding: 26px 22px 18px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 21px;
+      font-weight: 800;
+      color: var(--accent)
+    }
+
+    .logo-text span {
+      color: var(--text3)
+    }
+
+    .logo-badge {
+      font-size: 9px;
+      font-weight: 700;
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-left: 7px;
+      text-transform: uppercase;
+      letter-spacing: .05em
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 14px 10px;
+      overflow-y: auto
+    }
+
+    .nav-section {
+      margin-bottom: 22px
+    }
+
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text3);
+      padding: 0 12px;
+      margin-bottom: 7px
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 13px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all var(--tr);
+      margin-bottom: 2px;
+      user-select: none
+    }
+
+    .nav-item:hover {
+      background: var(--surface2);
+      color: var(--text)
+    }
+
+    .nav-item.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 600
+    }
+
+    .nav-icon {
+      font-size: 15px;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--danger);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px
+    }
+
+    .sidebar-footer {
+      padding: 14px 10px;
+      border-top: 1px solid var(--border)
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface2)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0
+    }
+
+    .avatar-admin {
+      background: var(--accent-light);
+      color: var(--accent)
+    }
+
+    .avatar-user {
+      background: var(--success-light);
+      color: var(--success)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .04em
+    }
+
+    .logout-btn {
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text3);
+      font-size: 15px;
+      border: none;
+      background: none;
+      transition: color var(--tr)
+    }
+
+    .logout-btn:hover {
+      color: var(--danger)
+    }
+
+    /* MAIN */
+    .main-area {
+      flex: 1;
+      margin-left: 255px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh
+    }
+
+    .topbar {
+      height: 62px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      transition: background var(--tr)
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .menu-toggle {
+      display: none;
+      padding: 8px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text)
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .topbar-time {
+      font-size: 13px;
+      color: var(--text2);
+      font-variant-numeric: tabular-nums;
+      font-weight: 500
+    }
+
+    .theme-toggle {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--text);
+      transition: all var(--tr)
+    }
+
+    .theme-toggle:hover {
+      background: var(--border)
+    }
+
+    .page-content {
+      flex: 1;
+      padding: 28px 30px;
+      display: none
+    }
+
+    .page-content.active {
+      display: block
+    }
+
+    /* STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 24px
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      transition: all .35s cubic-bezier(.4, 0, .2, 1);
+      backdrop-filter: blur(6px)
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: var(--shadow-lg)
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      opacity: .06
+    }
+
+    .stat-card.blue::before {
+      background: var(--accent)
+    }
+
+    .stat-card.green::before {
+      background: var(--success)
+    }
+
+    .stat-card.yellow::before {
+      background: var(--warning)
+    }
+
+    .stat-card.red::before {
+      background: var(--danger)
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      margin-bottom: 14px
+    }
+
+    .stat-icon.blue {
+      background: var(--accent-light)
+    }
+
+    .stat-icon.green {
+      background: var(--success-light)
+    }
+
+    .stat-icon.yellow {
+      background: var(--warning-light)
+    }
+
+    .stat-icon.red {
+      background: var(--danger-light)
+    }
+
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 5px
+    }
+
+    .stat-label {
+      font-size: 12.5px;
+      color: var(--text2);
+      font-weight: 500
+    }
+
+    .stat-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+      padding: 2px 7px;
+      border-radius: 20px
+    }
+
+    .stat-change.up {
+      background: var(--success-light);
+      color: var(--success)
+    }
+
+    .stat-change.down {
+      background: var(--danger-light);
+      color: var(--danger)
+    }
+
+    /* CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      transition: background var(--tr)
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px
+    }
+
+    .grid-65-35 {
+      display: grid;
+      grid-template-columns: 65fr 35fr;
+      gap: 22px
+    }
+
+    /* TABLE */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-sm)
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px
+    }
+
+    thead th {
+      background: var(--surface2);
+      padding: 11px 15px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap
+    }
+
+    tbody td {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none
+    }
+
+    tbody tr:hover {
+      background: var(--surface2)
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .badge-green {
+      background: var(--success-light);
+      color: var(--success)
+    }
+
+    .badge-yellow {
+      background: var(--warning-light);
+      color: var(--warning)
+    }
+
+    .badge-red {
+      background: var(--danger-light);
+      color: var(--danger)
+    }
+
+    .badge-blue {
+      background: var(--accent-light);
+      color: var(--accent)
+    }
+
+    .badge-gray {
+      background: var(--surface2);
+      color: var(--text2);
+      border: 1px solid var(--border)
+    }
+
+    /* QR */
+    .qr-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px
+    }
+
+    #qr-canvas-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: var(--shadow-lg);
+      border: 3px solid var(--border);
+      position: relative
+    }
+
+    .qr-exp-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, .75);
+      border-radius: 14px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 17px
+    }
+
+    .qr-info-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center
+    }
+
+    .qr-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 12.5px;
+      color: var(--text2);
+      font-weight: 500
+    }
+
+    .qr-chip strong {
+      color: var(--text)
+    }
+
+    /* COUNTDOWN */
+    .cr-ring {
+      position: relative;
+      width: 100px;
+      height: 100px
+    }
+
+    .cr-ring svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform: rotate(-90deg)
+    }
+
+    .cr-ring circle {
+      fill: none;
+      stroke-width: 6
+    }
+
+    .ring-track {
+      stroke: var(--border)
+    }
+
+    .ring-progress {
+      stroke: var(--accent);
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke .3s
+    }
+
+    .cr-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center
+    }
+
+    .cr-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1
+    }
+
+    .cr-sec {
+      font-size: 11px;
+      color: var(--text3)
+    }
+
+    /* CAMERA */
+    #scan-video-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
+      margin: 0 auto
+    }
+
+    #scan-video-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    .scan-frame {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .scan-box {
+      width: 200px;
+      height: 200px;
+      border: 2px solid rgba(255, 255, 255, .6);
+      border-radius: 14px;
+      position: relative
+    }
+
+    .scan-box::before,
+    .scan-box::after {
+      content: '';
+      position: absolute;
+      width: 28px;
+      height: 28px
+    }
+
+    .scan-box::before {
+      top: -2px;
+      left: -2px;
+      border-top: 4px solid var(--accent);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px 0 0 0
+    }
+
+    .scan-box::after {
+      bottom: -2px;
+      right: -2px;
+      border-bottom: 4px solid var(--accent);
+      border-right: 4px solid var(--accent);
+      border-radius: 0 0 10px 0
+    }
+
+    .scan-line {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scanMove 2s ease-in-out infinite
+    }
+
+    @keyframes scanMove {
+      0% {
+        top: 0
+      }
+
+      50% {
+        top: calc(100% - 2px)
+      }
+
+      100% {
+        top: 0
+      }
+    }
+
+    /* NOTIF */
+    .notif-container {
+      position: fixed;
+      top: 76px;
+      right: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      z-index: 9999;
+      pointer-events: none
+    }
+
+    .notif {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      min-width: 290px;
+      max-width: 360px;
+      box-shadow: var(--shadow-lg);
+      animation: slideIn .3s cubic-bezier(.34, 1.56, .64, 1);
+      pointer-events: all;
+      border-left: 4px solid var(--accent)
+    }
+
+    .notif.success {
+      border-left-color: var(--success)
+    }
+
+    .notif.error {
+      border-left-color: var(--danger)
+    }
+
+    .notif.warning {
+      border-left-color: var(--warning)
+    }
+
+    .notif-icon {
+      font-size: 17px;
+      flex-shrink: 0
+    }
+
+    .notif-title {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: var(--text)
+    }
+
+    .notif-msg {
+      font-size: 12.5px;
+      color: var(--text2);
+      margin-top: 2px
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(120%);
+        opacity: 0
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1
+      }
+
+      to {
+        transform: translateX(120%);
+        opacity: 0
+      }
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center
+    }
+
+    .modal-overlay.active {
+      display: flex
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: var(--shadow-lg);
+      animation: mPop .25s cubic-bezier(.34, 1.56, .64, 1)
+    }
+
+    @keyframes mPop {
+      from {
+        transform: scale(.9);
+        opacity: 0
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px
+    }
+
+    .modal-sub {
+      font-size: 13.5px;
+      color: var(--text2);
+      margin-bottom: 22px
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 22px
+    }
+
+    /* PROFILE */
+    .profile-header {
+      background: linear-gradient(135deg, var(--accent) 0%, #5b8bff 100%);
+      border-radius: var(--radius);
+      padding: 28px;
+      color: #fff;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 22px
+    }
+
+    .profile-avatar-big {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 700;
+      border: 3px solid rgba(255, 255, 255, .3);
+      flex-shrink: 0
+    }
+
+    .p-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700
+    }
+
+    .p-dept {
+      font-size: 14px;
+      opacity: .8;
+      margin-top: 3px
+    }
+
+    .p-stats {
+      display: flex;
+      gap: 22px;
+      margin-top: 14px
+    }
+
+    .p-stat-num {
+      font-size: 22px;
+      font-weight: 700
+    }
+
+    .p-stat-lbl {
+      font-size: 12px;
+      opacity: .7
+    }
+
+    /* TODAY CARDS */
+    .attend-today {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 22px
+    }
+
+    .today-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .today-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px
+    }
+
+    .today-icon.in {
+      background: var(--success-light)
+    }
+
+    .today-icon.out {
+      background: var(--warning-light)
+    }
+
+    .today-time {
+      font-family: 'Syne', sans-serif;
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .today-lbl {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px
+    }
+
+    /* FILTERS */
+    .date-filter {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .filter-input {
+      padding: 8px 13px;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--tr)
+    }
+
+    .filter-input:focus {
+      border-color: var(--accent)
+    }
+
+    /* GPS */
+    .gps-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 15px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500
+    }
+
+    .gps-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: gBlip 1.5s ease-in-out infinite
+    }
+
+    .gps-ok .gps-dot {
+      background: var(--success)
+    }
+
+    .gps-fail .gps-dot {
+      background: var(--danger)
+    }
+
+    .gps-checking .gps-dot {
+      background: var(--warning)
+    }
+
+    @keyframes gBlip {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(.8)
+      }
+    }
+
+    /* IDLE */
+    .idle-warning {
+      display: none;
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      background: var(--warning);
+      color: #fff;
+      padding: 11px 18px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 13.5px;
+      z-index: 9998;
+      animation: pulse 1.5s ease-in-out infinite;
+      box-shadow: var(--shadow-lg);
+      cursor: pointer
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .8
+      }
+    }
+
+    /* PROGRESS */
+    .progress-bar {
+      background: var(--surface2);
+      border-radius: 20px;
+      height: 7px;
+      overflow: hidden;
+      margin-top: 7px
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 20px;
+      background: var(--accent);
+      transition: width .6s ease, background .3s
+    }
+
+    /* MISC */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .4);
+      z-index: 99
+    }
+
+    .sidebar-backdrop.active {
+      display: block
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 44px 24px;
+      color: var(--text3)
+    }
+
+    .empty-icon {
+      font-size: 44px;
+      margin-bottom: 10px
+    }
+
+    .empty-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 5px
+    }
+
+    .empty-msg {
+      font-size: 13px
+    }
+
+    .fw7 {
+      font-weight: 700
+    }
+
+    .mt1 {
+      margin-top: 8px
+    }
+
+    .mt2 {
+      margin-top: 16px
+    }
+
+    .mb1 {
+      margin-bottom: 8px
+    }
+
+    .mb2 {
+      margin-bottom: 16px
+    }
+
+    .flex {
+      display: flex
+    }
+
+    .ai-c {
+      align-items: center
+    }
+
+    .jb {
+      justify-content: space-between
+    }
+
+    .g2 {
+      gap: 8px
+    }
+
+    .g3 {
+      gap: 12px
+    }
+
+    .w100 {
+      width: 100%
+    }
+
+    .ts {
+      font-size: 13px
+    }
+
+    .txs {
+      font-size: 11px
+    }
+
+    .tc {
+      color: var(--text2)
+    }
+
+    code {
+      font-family: monospace;
+      font-size: 12px;
+      background: var(--surface2);
+      padding: 2px 7px;
+      border-radius: 5px;
+      border: 1px solid var(--border)
+    }
+
+    /* PAGE TRANSITIONS */
+    .page-content {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .35s ease, transform .35s ease
+    }
+
+    .page-content.active {
+      opacity: 1;
+      transform: translateY(0)
+    }
+
+    /* COUNT-UP */
+    .stat-value {
+      display: inline-block;
+      transition: color var(--tr)
+    }
+
+    /* TABLE ROW STAGGER */
+    @keyframes rowIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    tbody tr {
+      animation: rowIn .3s ease both
+    }
+
+    tbody tr:nth-child(1) {
+      animation-delay: .03s
+    }
+
+    tbody tr:nth-child(2) {
+      animation-delay: .06s
+    }
+
+    tbody tr:nth-child(3) {
+      animation-delay: .09s
+    }
+
+    tbody tr:nth-child(4) {
+      animation-delay: .12s
+    }
+
+    tbody tr:nth-child(5) {
+      animation-delay: .15s
+    }
+
+    tbody tr:nth-child(6) {
+      animation-delay: .18s
+    }
+
+    tbody tr:nth-child(7) {
+      animation-delay: .21s
+    }
+
+    tbody tr:nth-child(8) {
+      animation-delay: .24s
+    }
+
+    /* BUTTON RIPPLE */
+    .btn {
+      position: relative;
+      overflow: hidden
+    }
+
+    .btn .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .35);
+      transform: scale(0);
+      animation: rippleAnim .6s ease-out;
+      pointer-events: none
+    }
+
+    @keyframes rippleAnim {
+      to {
+        transform: scale(4);
+        opacity: 0
+      }
+    }
+
+    /* SKELETON LOADING */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    /* NOTIFICATION PANEL */
+    .notif-bell {
+      position: relative;
+      cursor: pointer
+    }
+
+    .notif-bell-badge {
+      position: absolute;
+      top: -4px;
+      right: -6px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: popIn .3s cubic-bezier(.34, 1.56, .64, 1)
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(0)
+      }
+
+      to {
+        transform: scale(1)
+      }
+    }
+
+    .notif-panel {
+      position: absolute;
+      top: 52px;
+      right: 0;
+      width: 340px;
+      max-height: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      z-index: 999;
+      display: none;
+      overflow: hidden
+    }
+
+    .notif-panel.open {
+      display: block;
+      animation: mPop .25s cubic-bezier(.34, 1.56, .64, 1)
+    }
+
+    .notif-panel-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .notif-panel-header h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .notif-panel-body {
+      overflow-y: auto;
+      max-height: 340px;
+      padding: 6px
+    }
+
+    .notif-panel-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      transition: background var(--tr);
+      cursor: default
+    }
+
+    .notif-panel-item:hover {
+      background: var(--surface2)
+    }
+
+    .notif-panel-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0
+    }
+
+    .notif-panel-icon.green {
+      background: var(--success-light)
+    }
+
+    .notif-panel-icon.blue {
+      background: var(--accent-light)
+    }
+
+    .notif-panel-icon.yellow {
+      background: var(--warning-light)
+    }
+
+    .notif-panel-icon.red {
+      background: var(--danger-light)
+    }
+
+    .notif-panel-text {
+      flex: 1;
+      min-width: 0
+    }
+
+    .notif-panel-text strong {
+      font-size: 12.5px;
+      color: var(--text);
+      display: block
+    }
+
+    .notif-panel-text span {
+      font-size: 11.5px;
+      color: var(--text3)
+    }
+
+    .notif-panel-time {
+      font-size: 10px;
+      color: var(--text3);
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px
+    }
+
+    /* CALENDAR HEATMAP */
+    .heatmap-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .heatmap-row {
+      display: flex;
+      gap: 3px
+    }
+
+    .heatmap-cell {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      transition: all var(--tr);
+      cursor: pointer;
+      position: relative
+    }
+
+    .heatmap-cell:hover {
+      transform: scale(1.3);
+      z-index: 2;
+      box-shadow: var(--shadow)
+    }
+
+    .heatmap-cell.l1 {
+      background: #dcfce7;
+      border-color: #bbf7d0
+    }
+
+    .heatmap-cell.l2 {
+      background: #86efac;
+      border-color: #4ade80
+    }
+
+    .heatmap-cell.l3 {
+      background: #22c55e;
+      border-color: #16a34a
+    }
+
+    .heatmap-cell.l4 {
+      background: #15803d;
+      border-color: #166534
+    }
+
+    [data-theme="dark"] .heatmap-cell.l1 {
+      background: #0a2015;
+      border-color: #0f2e1f
+    }
+
+    [data-theme="dark"] .heatmap-cell.l2 {
+      background: #14532d;
+      border-color: #166534
+    }
+
+    [data-theme="dark"] .heatmap-cell.l3 {
+      background: #166534;
+      border-color: #15803d
+    }
+
+    [data-theme="dark"] .heatmap-cell.l4 {
+      background: #15803d;
+      border-color: #22c55e
+    }
+
+    .heatmap-tooltip {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--bg);
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 10px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s
+    }
+
+    .heatmap-cell:hover .heatmap-tooltip {
+      opacity: 1
+    }
+
+    .heatmap-labels {
+      display: flex;
+      gap: 3px;
+      padding-left: 2px
+    }
+
+    .heatmap-labels span {
+      width: 18px;
+      text-align: center;
+      font-size: 9px;
+      color: var(--text3);
+      font-weight: 600
+    }
+
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text3)
+    }
+
+    .heatmap-legend .heatmap-cell {
+      width: 12px;
+      height: 12px;
+      cursor: default
+    }
+
+    .heatmap-legend .heatmap-cell:hover {
+      transform: none
+    }
+
+    /* ACTIVITY TIMELINE */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-height: 350px;
+      overflow-y: auto;
+      padding-right: 4px
+    }
+
+    .tl-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      position: relative
+    }
+
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 36px;
+      bottom: -2px;
+      width: 2px;
+      background: var(--border)
+    }
+
+    .tl-item:last-child::before {
+      display: none
+    }
+
+    .tl-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+      z-index: 1
+    }
+
+    .tl-dot.green {
+      background: var(--success-light);
+      border: 2px solid var(--success)
+    }
+
+    .tl-dot.blue {
+      background: var(--accent-light);
+      border: 2px solid var(--accent)
+    }
+
+    .tl-dot.yellow {
+      background: var(--warning-light);
+      border: 2px solid var(--warning)
+    }
+
+    .tl-dot.red {
+      background: var(--danger-light);
+      border: 2px solid var(--danger)
+    }
+
+    .tl-content {
+      flex: 1;
+      min-width: 0
+    }
+
+    .tl-content strong {
+      font-size: 12.5px;
+      color: var(--text);
+      display: block
+    }
+
+    .tl-content span {
+      font-size: 11px;
+      color: var(--text3)
+    }
+
+    .tl-time {
+      font-size: 10px;
+      color: var(--text3);
+      white-space: nowrap;
+      margin-top: 2px
+    }
+
+    /* ACHIEVEMENT BADGES */
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px
+    }
+
+    .achievement {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      transition: all .35s ease;
+      position: relative;
+      overflow: hidden
+    }
+
+    .achievement:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow)
+    }
+
+    .achievement.unlocked {
+      border-color: var(--accent);
+      background: var(--accent-light)
+    }
+
+    .achievement.unlocked .ach-icon {
+      animation: badgePulse 2s ease-in-out infinite
+    }
+
+    @keyframes badgePulse {
+
+      0%,
+      100% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.1)
+      }
+    }
+
+    .ach-icon {
+      font-size: 28px;
+      margin-bottom: 6px;
+      display: block;
+      filter: grayscale(1) opacity(.4)
+    }
+
+    .achievement.unlocked .ach-icon {
+      filter: none
+    }
+
+    .ach-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px
+    }
+
+    .ach-desc {
+      font-size: 10px;
+      color: var(--text3)
+    }
+
+    .achievement.locked::after {
+      content: '🔒';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 11px
+    }
+
+    /* FAB */
+    .fab-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 150;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 10px
+    }
+
+    .fab-main {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(45, 91, 227, .4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .3s cubic-bezier(.4, 0, .2, 1);
+      z-index: 2
+    }
+
+    .fab-main:hover {
+      transform: scale(1.08);
+      box-shadow: 0 8px 32px rgba(45, 91, 227, .5)
+    }
+
+    .fab-main.open {
+      transform: rotate(45deg);
+      background: var(--danger)
+    }
+
+    .fab-actions {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(20px) scale(.8);
+      transition: all .25s cubic-bezier(.4, 0, .2, 1);
+      pointer-events: none
+    }
+
+    .fab-actions.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: all
+    }
+
+    .fab-action {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      animation: fabIn .3s ease both
+    }
+
+    .fab-action:nth-child(1) {
+      animation-delay: .05s
+    }
+
+    .fab-action:nth-child(2) {
+      animation-delay: .1s
+    }
+
+    .fab-action:nth-child(3) {
+      animation-delay: .15s
+    }
+
+    @keyframes fabIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .fab-action-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      box-shadow: var(--shadow);
+      transition: all var(--tr)
+    }
+
+    .fab-action-btn:hover {
+      background: var(--accent-light)
+    }
+
+    .fab-action-label {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      box-shadow: var(--shadow)
+    }
+
+    /* COMMAND PALETTE */
+    .cmd-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      backdrop-filter: blur(6px);
+      z-index: 300;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: min(20vh, 180px)
+    }
+
+    .cmd-overlay.active {
+      display: flex
+    }
+
+    .cmd-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 90%;
+      max-width: 520px;
+      box-shadow: var(--shadow-lg);
+      animation: mPop .2s cubic-bezier(.34, 1.56, .64, 1);
+      overflow: hidden
+    }
+
+    .cmd-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .cmd-input-wrap span {
+      font-size: 18px;
+      color: var(--text3)
+    }
+
+    .cmd-input {
+      flex: 1;
+      border: none;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      outline: none
+    }
+
+    .cmd-input::placeholder {
+      color: var(--text3)
+    }
+
+    .cmd-hint {
+      font-size: 10px;
+      color: var(--text3);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px
+    }
+
+    .cmd-results {
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 6px
+    }
+
+    .cmd-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--tr)
+    }
+
+    .cmd-item:hover,
+    .cmd-item.active {
+      background: var(--accent-light);
+      color: var(--accent)
+    }
+
+    .cmd-item-icon {
+      font-size: 16px;
+      width: 22px;
+      text-align: center
+    }
+
+    .cmd-item-text {
+      flex: 1;
+      font-size: 13.5px;
+      font-weight: 500
+    }
+
+    .cmd-item-text mark {
+      background: var(--warning-light);
+      color: var(--warning);
+      border-radius: 2px;
+      padding: 0 2px
+    }
+
+    .cmd-item-short {
+      font-size: 10px;
+      color: var(--text3)
+    }
+
+    .cmd-empty {
+      padding: 28px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 13px
+    }
+
+    /* NAV ACTIVE GLOW */
+    .nav-item.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 600;
+      box-shadow: inset 3px 0 0 var(--accent)
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .grid-2,
+      .grid-65-35 {
+        grid-template-columns: 1fr
+      }
+
+      .auth-wrap {
+        grid-template-columns: 1fr
+      }
+
+      .auth-art {
+        display: none
+      }
+
+      .badge-grid {
+        grid-template-columns: repeat(3, 1fr)
+      }
+    }
+
+    @media(max-width:768px) {
+      .sidebar {
+        transform: translateX(-100%)
+      }
+
+      .sidebar.open {
+        transform: translateX(0)
+      }
+
+      .main-area {
+        margin-left: 0
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .page-content {
+        padding: 18px 14px
+      }
+
+      .topbar {
+        padding: 0 14px
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px
+      }
+
+      .attend-today {
+        grid-template-columns: 1fr
+      }
+
+      .auth-form-side {
+        padding: 40px 24px
+      }
+
+      .modal {
+        padding: 22px
+      }
+
+      .notif-panel {
+        width: 290px;
+        right: -10px
+      }
+
+      .fab-container {
+        bottom: 18px;
+        right: 18px
+      }
+
+      .badge-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .cmd-box {
+        width: 95%
+      }
+    }
+
+    @media(max-width:480px) {
+      .stats-grid {
+        grid-template-columns: 1fr
+      }
+
+      .badge-grid {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══ LOGIN ═══ -->
+  <div class="auth-wrap" id="page-login">
+    <div class="auth-art">
+      <div class="auth-logo-big">Absensi<span>QR</span></div>
+      <div class="auth-tagline">Sistem absensi modern dengan QR Code real-time & dashboard analitik profesional.</div>
+      <div class="auth-qr-art">
+        <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="38" height="38" rx="4" fill="#1a1814" />
+          <rect x="18" y="18" width="22" height="22" rx="2" fill="white" />
+          <rect x="24" y="24" width="10" height="10" rx="1" fill="#1a1814" />
+          <rect x="72" y="10" width="38" height="38" rx="4" fill="#1a1814" />
+          <rect x="80" y="18" width="22" height="22" rx="2" fill="white" />
+          <rect x="86" y="24" width="10" height="10" rx="1" fill="#1a1814" />
+          <rect x="10" y="72" width="38" height="38" rx="4" fill="#1a1814" />
+          <rect x="18" y="80" width="22" height="22" rx="2" fill="white" />
+          <rect x="24" y="86" width="10" height="10" rx="1" fill="#1a1814" />
+          <rect x="55" y="10" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="55" y="26" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="55" y="42" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="10" y="55" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="26" y="55" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="42" y="55" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="58" y="58" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="74" y="58" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="90" y="58" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="106" y="58" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="58" y="74" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="74" y="74" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="58" y="90" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="90" y="90" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="74" y="106" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="90" y="106" width="8" height="8" rx="1" fill="#1a1814" />
+          <rect x="106" y="90" width="8" height="8" rx="1" fill="#1a1814" />
+        </svg>
+      </div>
+    </div>
+    <div class="auth-form-side">
+      <div class="auth-card">
+        <div class="auth-title">Selamat Datang 👋</div>
+        <div class="auth-sub">Masuk ke akun Anda untuk mencatat kehadiran</div>
+        <div class="form-group">
+          <label class="form-label">Email / NIP</label>
+          <input type="text" class="form-control" id="login-email" placeholder="admin@demo.com" value="admin@demo.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="login-pass" placeholder="password" value="password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Login sebagai</label>
+          <select class="form-control" id="login-role">
+            <option value="admin">👨‍💼 Administrator</option>
+            <option value="user">👤 Karyawan / Siswa</option>
+          </select>
+        </div>
+        <button class="btn btn-primary mt2" onclick="doLogin()">🔑 Masuk Sekarang</button>
+        <div class="auth-toggle">Belum punya akun? <a onclick="showAuthPage('page-register')">Daftar di sini</a></div>
+        <div class="mt2 txs tc" style="text-align:center">Demo Admin: admin@demo.com / password &nbsp;|&nbsp; Demo User:
+          budi@demo.com / password</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ REGISTER ═══ -->
+  <div class="auth-wrap" id="page-register" style="display:none">
+    <div class="auth-art">
+      <div class="auth-logo-big">Absensi<span>QR</span></div>
+      <div class="auth-tagline">Bergabunglah dan nikmati kemudahan absensi digital yang modern.</div>
+    </div>
+    <div class="auth-form-side">
+      <div class="auth-card">
+        <div class="auth-title">Buat Akun Baru ✨</div>
+        <div class="auth-sub">Isi data diri Anda dengan benar</div>
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap</label>
+          <input type="text" class="form-control" id="reg-name" placeholder="Budi Santoso">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" id="reg-email" placeholder="budi@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">NIP / NIS</label>
+          <input type="text" class="form-control" id="reg-nip" placeholder="2024001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Departemen / Kelas</label>
+          <input type="text" class="form-control" id="reg-dept" placeholder="XII RPL 1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="reg-pass" placeholder="Min. 8 karakter">
+        </div>
+        <button class="btn btn-primary mt2" onclick="doRegister()">✅ Daftar Sekarang</button>
+        <div class="auth-toggle">Sudah punya akun? <a onclick="showAuthPage('page-login')">Masuk di sini</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ APP SHELL ═══ -->
+  <div class="app-shell" id="app-shell">
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+    <!-- SIDEBAR ADMIN -->
+    <aside class="sidebar" id="sidebar-admin" style="display:none">
+      <div class="sidebar-logo">
+        <div class="logo-text">Absensi<span>QR</span><span class="logo-badge">Admin</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Utama</div>
+          <div class="nav-item active" onclick="switchPage('admin-dashboard',this)"><span
+              class="nav-icon">📊</span>Dashboard</div>
+          <div class="nav-item" onclick="switchPage('admin-qr',this)"><span class="nav-icon">📱</span>Generate QR Code
+          </div>
+          <div class="nav-item" onclick="switchPage('admin-attendance',this)"><span class="nav-icon">📋</span>Data
+            Absensi<span class="nav-badge" id="absent-badge">0</span></div>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Manajemen</div>
+          <div class="nav-item" onclick="switchPage('admin-users',this)"><span class="nav-icon">👥</span>Kelola Pengguna
+          </div>
+          <div class="nav-item" onclick="switchPage('admin-report',this)"><span class="nav-icon">📈</span>Laporan &
+            Export</div>
+          <div class="nav-item" onclick="switchPage('admin-settings',this)"><span class="nav-icon">⚙️</span>Pengaturan
+          </div>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar avatar-admin" id="adm-av">A</div>
+          <div class="user-info">
+            <div class="user-name" id="adm-name">Administrator</div>
+            <div class="user-role">Admin</div>
+          </div>
+          <button class="logout-btn" onclick="doLogout()" title="Logout">🚪</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- SIDEBAR USER -->
+    <aside class="sidebar" id="sidebar-user" style="display:none">
+      <div class="sidebar-logo">
+        <div class="logo-text">Absensi<span>QR</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Absensi</div>
+          <div class="nav-item active" onclick="switchPage('user-dashboard',this)"><span
+              class="nav-icon">🏠</span>Beranda</div>
+          <div class="nav-item" onclick="switchPage('user-scan',this)"><span class="nav-icon">📸</span>Scan QR Code
+          </div>
+          <div class="nav-item" onclick="switchPage('user-history',this)"><span class="nav-icon">📅</span>Riwayat Saya
+          </div>
+          <div class="nav-item" onclick="switchPage('user-profile',this)"><span class="nav-icon">👤</span>Profil</div>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar avatar-user" id="usr-av">U</div>
+          <div class="user-info">
+            <div class="user-name" id="usr-name">User</div>
+            <div class="user-role">Karyawan</div>
+          </div>
+          <button class="logout-btn" onclick="doLogout()" title="Logout">🚪</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+          <div class="page-title" id="topbar-title">Dashboard</div>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-time" id="topbar-clock">--:--:--</div>
+          <div class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()" title="Notifikasi">
+            <button class="theme-toggle" style="font-size:17px">🔔</button>
+            <div class="notif-bell-badge" id="notif-bell-count" style="display:none">0</div>
+            <div class="notif-panel" id="notif-panel">
+              <div class="notif-panel-header">
+                <h4>🔔 Notifikasi</h4><button class="btn btn-ghost btn-sm" onclick="clearNotifPanel(event)"
+                  style="padding:4px 8px;font-size:11px">Hapus semua</button>
+              </div>
+              <div class="notif-panel-body" id="notif-panel-body">
+                <div class="cmd-empty">Belum ada notifikasi</div>
+              </div>
+            </div>
+          </div>
+          <button class="theme-toggle" onclick="toggleTheme()" title="Dark Mode">🌙</button>
+          <div class="cmd-hint" onclick="openCmdPalette()" style="cursor:pointer">⌘K</div>
+        </div>
+      </header>
+
+      <!-- ADMIN DASHBOARD -->
+      <div class="page-content active" id="page-admin-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card blue">
+            <div class="stat-icon blue">👥</div>
+            <div class="stat-value" id="s-total">0</div>
+            <div class="stat-label">Total Pengguna</div>
+            <div class="stat-change up">▲ aktif terdaftar</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon green">✅</div>
+            <div class="stat-value" id="s-hadir">0</div>
+            <div class="stat-label">Hadir Hari Ini</div>
+            <div class="stat-change up">▲ tepat waktu</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon yellow">⏰</div>
+            <div class="stat-value" id="s-telat">0</div>
+            <div class="stat-label">Terlambat</div>
+            <div class="stat-change down">▼ lebih baik</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon red">❌</div>
+            <div class="stat-value" id="s-alfa">0</div>
+            <div class="stat-label">Alfa / Tidak Hadir</div>
+            <div class="stat-change down">▲ perhatikan</div>
+          </div>
+        </div>
+        <div class="grid-65-35 mb2">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📈 Grafik Kehadiran Mingguan</div>
+                <div class="card-subtitle">7 hari terakhir</div>
+              </div>
+              <select class="filter-input" onchange="updateChart(this.value)">
+                <option value="weekly">Mingguan</option>
+                <option value="monthly">Bulanan</option>
+              </select>
+            </div>
+            <canvas id="chart-weekly" height="100"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🍩 Status Hari Ini</div>
+            </div>
+            <canvas id="chart-donut" height="190"></canvas>
+          </div>
+        </div>
+        <div class="grid-2 mb2">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📅 Heatmap Kehadiran</div>
+                <div class="card-subtitle">30 hari terakhir</div>
+              </div>
+            </div>
+            <div class="heatmap-wrap" id="heatmap-wrap"></div>
+            <div class="heatmap-legend"><span>Sedikit</span>
+              <div class="heatmap-cell l1"></div>
+              <div class="heatmap-cell l2"></div>
+              <div class="heatmap-cell l3"></div>
+              <div class="heatmap-cell l4"></div><span>Banyak</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⚡ Aktivitas Terkini</div>
+            </div>
+            <div class="timeline" id="activity-timeline"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📋 Absensi Terbaru</div>
+              <div class="card-subtitle" id="today-label">Hari ini</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="switchPage('admin-attendance',null)">Lihat Semua →</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nama</th>
+                  <th>NIP/NIS</th>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN QR -->
+      <div class="page-content" id="page-admin-qr">
+        <div class="grid-2" style="max-width:880px;margin:0 auto">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📱 Generate QR Code</div>
+                <div class="card-subtitle">Buat QR Code unik untuk sesi absensi</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tipe Absensi</label>
+              <select class="form-control" id="qr-type">
+                <option value="checkin">✅ Check-in (Masuk)</option>
+                <option value="checkout">🏁 Check-out (Pulang)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Durasi Valid</label>
+              <select class="form-control" id="qr-dur">
+                <option value="2">2 Menit</option>
+                <option value="5">5 Menit</option>
+                <option value="10">10 Menit</option>
+                <option value="30">30 Menit</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Lokasi (Opsional)</label>
+              <input type="text" class="form-control" id="qr-loc" placeholder="Ruang Kelas A / Kantor Lantai 2">
+            </div>
+            <button class="btn btn-primary w100" onclick="generateQR()">⚡ Generate QR Code Baru</button>
+            <div class="divider"></div>
+            <div id="qr-info-box" style="display:none">
+              <div class="flex ai-c jb mb1">
+                <span class="fw7 ts">QR Code Aktif</span>
+                <span class="badge badge-green" id="qr-badge">● Aktif</span>
+              </div>
+              <div class="qr-info-row">
+                <div class="qr-chip">Tipe: <strong id="qi-t">-</strong></div>
+                <div class="qr-chip">Lokasi: <strong id="qi-l">-</strong></div>
+                <div class="qr-chip">Expired: <strong id="qi-e">-</strong></div>
+              </div>
+              <div class="progress-bar mt1">
+                <div class="progress-fill" id="qr-prog" style="width:100%"></div>
+              </div>
+              <div class="txs tc mt1" style="text-align:center" id="qr-tleft"></div>
+            </div>
+          </div>
+          <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:18px">
+            <div class="card-title" style="align-self:flex-start">🖼️ QR Code Preview</div>
+            <div class="qr-wrap">
+              <div id="qr-canvas-wrap">
+                <div id="qr-display"
+                  style="width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13.5px;text-align:center;padding:16px">
+                  Klik "Generate" untuk membuat QR Code
+                </div>
+                <div class="qr-exp-overlay" id="qr-exp-overlay">
+                  <div style="font-size:36px">⛔</div>
+                  <div>QR Code Expired</div>
+                </div>
+              </div>
+              <div class="cr-ring" id="cr-ring" style="display:none">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <circle class="ring-track" cx="50" cy="50" r="44" />
+                  <circle class="ring-progress" id="ring-c" cx="50" cy="50" r="44" stroke-dasharray="276.46"
+                    stroke-dashoffset="0" />
+                </svg>
+                <div class="cr-label">
+                  <div class="cr-num" id="cr-n">--</div>
+                  <div class="cr-sec">detik</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-ghost btn-sm" id="btn-dl" onclick="downloadQR()" style="display:none">⬇️
+                  Download</button>
+                <button class="btn btn-ghost btn-sm" id="btn-fs" onclick="showQRFullscreen()" style="display:none">🔍
+                  Fullscreen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card mt2">
+          <div class="card-header">
+            <div class="card-title">📜 Riwayat QR Code</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Tipe</th>
+                  <th>Dibuat</th>
+                  <th>Expired</th>
+                  <th>Scan</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="qr-hist"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN ATTENDANCE -->
+      <div class="page-content" id="page-admin-attendance">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📋 Data Absensi Lengkap</div>
+              <div class="card-subtitle">Filter dan kelola seluruh data absensi</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" onclick="exportPDF()">📄 Export PDF</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📊 Export CSV</button>
+            </div>
+          </div>
+          <div class="date-filter mb2">
+            <input type="date" class="filter-input" id="f-date" onchange="filterTable()">
+            <input type="text" class="filter-input" placeholder="🔍 Cari nama / NIP..." id="f-search"
+              oninput="filterTable()">
+            <select class="filter-input" id="f-status" onchange="filterTable()">
+              <option value="">Semua Status</option>
+              <option value="hadir">✅ Hadir</option>
+              <option value="telat">⏰ Terlambat</option>
+              <option value="alfa">❌ Alfa</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Reset</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nama</th>
+                  <th>NIP/NIS</th>
+                  <th>Departemen</th>
+                  <th>Tanggal</th>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Durasi</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="att-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN USERS -->
+      <div class="page-content" id="page-admin-users">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">👥 Kelola Pengguna</div>
+              <div class="card-subtitle">Daftar semua pengguna terdaftar</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openAddUser()">+ Tambah Pengguna</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nama</th>
+                  <th>NIP/NIS</th>
+                  <th>Email</th>
+                  <th>Departemen</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="usr-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN REPORT -->
+      <div class="page-content" id="page-admin-report">
+        <div class="stats-grid mb2">
+          <div class="stat-card blue">
+            <div class="stat-icon blue">📅</div>
+            <div class="stat-value" id="r-days">22</div>
+            <div class="stat-label">Hari Kerja Bulan Ini</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon green">📈</div>
+            <div class="stat-value" id="r-avg">0%</div>
+            <div class="stat-label">Rata-rata Kehadiran</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon yellow">⏱️</div>
+            <div class="stat-value" id="r-late">0</div>
+            <div class="stat-label">Total Keterlambatan</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon red">🏆</div>
+            <div class="stat-value" id="r-perf">0</div>
+            <div class="stat-label">Kehadiran Sempurna</div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📊 Kehadiran per Minggu (Bulan Ini)</div>
+            </div><canvas id="chart-monthly" height="120"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🏅 Top 5 Kehadiran Terbaik</div>
+            </div>
+            <div id="top-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN SETTINGS -->
+      <div class="page-content" id="page-admin-settings">
+        <div class="grid-2" style="max-width:780px">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⚙️ Jam Kerja & Toleransi</div>
+            </div>
+            <div class="form-group"><label class="form-label">Jam Masuk</label><input type="time" class="form-control"
+                id="set-ci" value="08:00"></div>
+            <div class="form-group"><label class="form-label">Toleransi Keterlambatan (menit)</label><input
+                type="number" class="form-control" id="set-tol" value="15" min="0" max="60"></div>
+            <div class="form-group"><label class="form-label">Jam Pulang</label><input type="time" class="form-control"
+                id="set-co" value="17:00"></div>
+            <button class="btn btn-primary" onclick="saveSettings()">💾 Simpan</button>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📍 Validasi GPS / Lokasi</div>
+            </div>
+            <div class="form-group"><label class="form-label">Aktifkan GPS</label>
+              <select class="form-control" id="set-gps">
+                <option value="off">❌ Nonaktif (Demo)</option>
+                <option value="on">✅ Aktif</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Radius (meter)</label><input type="number"
+                class="form-control" id="set-rad" value="100" min="10" max="1000"></div>
+            <div class="form-group"><label class="form-label">Koordinat (Lat, Lng)</label>
+              <input type="text" class="form-control" id="set-lat" placeholder="-6.200000">
+              <input type="text" class="form-control mt1" id="set-lng" placeholder="106.816666">
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()">💾 Simpan Lokasi</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- USER DASHBOARD -->
+      <div class="page-content" id="page-user-dashboard">
+        <div class="profile-header">
+          <div class="profile-avatar-big" id="u-big-av">U</div>
+          <div>
+            <div class="p-name" id="u-pname">Pengguna</div>
+            <div class="p-dept" id="u-pdept">Departemen</div>
+            <div class="p-stats">
+              <div>
+                <div class="p-stat-num" id="u-s-h">0</div>
+                <div class="p-stat-lbl">Hari Hadir</div>
+              </div>
+              <div>
+                <div class="p-stat-num" id="u-s-t">0</div>
+                <div class="p-stat-lbl">Terlambat</div>
+              </div>
+              <div>
+                <div class="p-stat-num" id="u-s-p">0%</div>
+                <div class="p-stat-lbl">Kehadiran</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="attend-today">
+          <div class="today-card">
+            <div class="today-icon in">🟢</div>
+            <div>
+              <div class="today-time" id="u-ci">--:--</div>
+              <div class="today-lbl">Check-in Hari Ini</div>
+            </div>
+          </div>
+          <div class="today-card">
+            <div class="today-icon out">🟡</div>
+            <div>
+              <div class="today-time" id="u-co">--:--</div>
+              <div class="today-lbl">Check-out Hari Ini</div>
+            </div>
+          </div>
+        </div>
+        <div class="card mb2" id="u-status-card">
+          <div class="flex ai-c g3">
+            <div id="u-st-icon" style="font-size:30px">📭</div>
+            <div>
+              <div class="fw7" id="u-st-text">Belum Absen Hari Ini</div>
+              <div class="ts tc mt1" id="u-st-sub">Scan QR Code untuk mencatat kehadiran Anda.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="switchPage('user-scan',null)">📸
+              Scan Sekarang</button>
+          </div>
+        </div>
+        <div class="card mb2">
+          <div class="card-header">
+            <div class="card-title">🏆 Penghargaan</div>
+            <div class="card-subtitle">Raih pencapaian dengan kehadiran konsisten!</div>
+          </div>
+          <div class="badge-grid" id="achievements-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Riwayat Terbaru</div><button class="btn btn-ghost btn-sm"
+              onclick="switchPage('user-history',null)">Lihat Semua →</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Durasi</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="u-recent"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- USER SCAN -->
+      <div class="page-content" id="page-user-scan">
+        <div style="max-width:500px;margin:0 auto">
+          <div class="card mb2">
+            <div class="card-title mb1">📷 Scan QR Code Absensi</div>
+            <div class="card-subtitle mb2">Arahkan kamera ke QR Code yang ditampilkan admin</div>
+            <div id="scan-video-wrap" style="display:none">
+              <video id="scan-video" autoplay playsinline muted></video>
+              <canvas id="scan-canvas" style="display:none"></canvas>
+              <div class="scan-frame">
+                <div class="scan-box">
+                  <div class="scan-line"></div>
+                </div>
+              </div>
+            </div>
+            <div id="scan-ph" style="text-align:center;padding:44px 24px">
+              <div style="font-size:60px;margin-bottom:14px">📷</div>
+              <div class="fw7 mb1">Kamera belum aktif</div>
+              <div class="ts tc mb2">Tekan tombol untuk memulai scan</div>
+              <button class="btn btn-primary btn-sm" onclick="startCamera()" style="width:auto">📸 Aktifkan
+                Kamera</button>
+            </div>
+            <div id="scan-res" style="display:none;margin-top:14px">
+              <div class="card" id="scan-res-card" style="border:2px solid var(--success)">
+                <div style="text-align:center">
+                  <div id="sr-icon" style="font-size:44px;margin-bottom:7px">✅</div>
+                  <div class="fw7" style="font-size:17px" id="sr-title">Berhasil!</div>
+                  <div class="ts tc mt1" id="sr-msg">Kehadiran dicatat.</div>
+                  <div class="mt1 fw7" id="sr-time" style="color:var(--accent);font-size:19px">--:--:--</div>
+                </div>
+              </div>
+            </div>
+            <div class="mt2" id="gps-box">
+              <div class="gps-status gps-checking" id="gps-st"
+                style="background:var(--surface2);border:1px solid var(--border)">
+                <div class="gps-dot"></div><span id="gps-txt">Memeriksa lokasi GPS...</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="btn btn-danger btn-sm w100" onclick="stopCamera()" id="btn-stop" style="display:none">⏹
+                Stop Kamera</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title mb2">📲 Cara Scan</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <div class="flex ai-c g3">
+                <div
+                  style="width:30px;height:30px;border-radius:50%;background:var(--accent-light);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">
+                  1</div>
+                <div class="ts">Aktifkan kamera dan izinkan akses</div>
+              </div>
+              <div class="flex ai-c g3">
+                <div
+                  style="width:30px;height:30px;border-radius:50%;background:var(--accent-light);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">
+                  2</div>
+                <div class="ts">Arahkan ke QR Code yang ditampilkan admin</div>
+              </div>
+              <div class="flex ai-c g3">
+                <div
+                  style="width:30px;height:30px;border-radius:50%;background:var(--accent-light);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">
+                  3</div>
+                <div class="ts">Tunggu konfirmasi kehadiran muncul di layar</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USER HISTORY -->
+      <div class="page-content" id="page-user-history">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Riwayat Absensi Saya</div>
+            <div class="date-filter">
+              <input type="month" class="filter-input" id="u-f-month" onchange="renderUserHistory()">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Tanggal</th>
+                  <th>Hari</th>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Durasi</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="u-hist-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- USER PROFILE -->
+      <div class="page-content" id="page-user-profile">
+        <div style="max-width:580px;margin:0 auto">
+          <div class="card mb2">
+            <div class="card-title mb2">👤 Profil Saya</div>
+            <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text"
+                class="form-control" id="pf-name"></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control"
+                id="pf-email"></div>
+            <div class="form-group"><label class="form-label">NIP / NIS</label><input type="text" class="form-control"
+                id="pf-nip" readonly style="opacity:.6"></div>
+            <div class="form-group"><label class="form-label">Departemen</label><input type="text" class="form-control"
+                id="pf-dept"></div>
+            <button class="btn btn-primary" onclick="saveProfile()">💾 Simpan Perubahan</button>
+          </div>
+          <div class="card">
+            <div class="card-title mb2">🔐 Ubah Password</div>
+            <div class="form-group"><label class="form-label">Password Lama</label><input type="password"
+                class="form-control" id="pf-op" placeholder="••••••••"></div>
+            <div class="form-group"><label class="form-label">Password Baru</label><input type="password"
+                class="form-control" id="pf-np" placeholder="Min. 8 karakter"></div>
+            <button class="btn btn-ghost" onclick="changePass()">🔑 Ubah Password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modal-ol" onclick="closeModalOL(event)">
+    <div class="modal" id="modal-box">
+      <div class="modal-title" id="m-title">Modal</div>
+      <div class="modal-sub" id="m-sub"></div>
+      <div id="m-body"></div>
+      <div class="modal-actions" id="m-actions">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Batal</button>
+        <button class="btn btn-primary btn-sm" id="m-ok">Konfirmasi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD USER MODAL -->
+  <div class="modal-overlay" id="add-usr-modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">👤 Tambah Pengguna</div>
+      <div class="modal-sub">Isi data pengguna baru</div>
+      <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-control"
+          id="nu-name" placeholder="Nama Lengkap"></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control"
+          id="nu-email" placeholder="email@domain.com"></div>
+      <div class="form-group"><label class="form-label">NIP / NIS</label><input type="text" class="form-control"
+          id="nu-nip" placeholder="2024001"></div>
+      <div class="form-group"><label class="form-label">Departemen</label><input type="text" class="form-control"
+          id="nu-dept" placeholder="XII RPL 1"></div>
+      <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-control"
+          id="nu-pass" placeholder="••••••••"></div>
+      <div class="form-group"><label class="form-label">Role</label><select class="form-control" id="nu-role">
+          <option value="user">Karyawan/Siswa</option>
+          <option value="admin">Admin</option>
+        </select></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost btn-sm" onclick="closeAddUser()">Batal</button>
+        <button class="btn btn-primary btn-sm" onclick="addUser()">Tambah</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR FULLSCREEN -->
+  <div class="modal-overlay" id="qr-fs-modal" onclick="closeFS()">
+    <div
+      style="background:#fff;border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:14px"
+      onclick="event.stopPropagation()">
+      <div id="qr-fs-display" style="width:280px;height:280px"></div>
+      <div class="ts tc">Tunjukkan QR Code ini kepada peserta</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeFS()">✕ Tutup</button>
+    </div>
+  </div>
+
+  <div class="notif-container" id="notif-c"></div>
+  <div class="idle-warning" id="idle-w" onclick="this.style.display='none'">⚠️ Sesi hampir habis! Klik untuk lanjutkan.
+  </div>
+
+  <!-- FAB -->
+  <div class="fab-container" id="fab-container" style="display:none">
+    <button class="fab-main" id="fab-main" onclick="toggleFAB()">＋</button>
+    <div class="fab-actions" id="fab-actions"></div>
+  </div>
+
+  <!-- COMMAND PALETTE -->
+  <div class="cmd-overlay" id="cmd-overlay" onclick="closeCmdPalette()">
+    <div class="cmd-box" onclick="event.stopPropagation()">
+      <div class="cmd-input-wrap">
+        <span>🔍</span>
+        <input class="cmd-input" id="cmd-input" placeholder="Cari halaman, aksi, atau pengguna..." oninput="filterCmd()"
+          onkeydown="cmdKeyDown(event)">
+        <div class="cmd-hint">ESC</div>
+      </div>
+      <div class="cmd-results" id="cmd-results"></div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════ DATA STORE ═══════════════════════
+    const DB = {
+      users: [
+        { id: 1, name: 'Administrator', email: 'admin@demo.com', nip: 'ADM001', dept: 'IT Department', role: 'admin', password: 'demo', active: true },
+        { id: 2, name: 'Budi Santoso', email: 'budi@demo.com', nip: '2024001', dept: 'XII RPL 1', role: 'user', password: 'demo', active: true },
+        { id: 3, name: 'Siti Rahma', email: 'siti@demo.com', nip: '2024002', dept: 'XII RPL 1', role: 'user', password: 'demo', active: true },
+        { id: 4, name: 'Andi Wijaya', email: 'andi@demo.com', nip: '2024003', dept: 'XII TKJ 2', role: 'user', password: 'demo', active: true },
+        { id: 5, name: 'Dewi Kusuma', email: 'dewi@demo.com', nip: '2024004', dept: 'XII TKJ 2', role: 'user', password: 'demo', active: true },
+        { id: 6, name: 'Reza Pratama', email: 'reza@demo.com', nip: '2024005', dept: 'XII MM 1', role: 'user', password: 'demo', active: false },
+      ],
+      attendance: [],
+      qrCodes: [],
+      settings: { checkin: '08:00', checkout: '17:00', tolerance: 15, gps: 'off', radius: 100, lat: -6.2, lng: 106.8 },
+      nextId: 200
+    };
+
+    function genMockData() {
+      const today = new Date(); DB.attendance = [];
+      let id = 1;
+      DB.users.filter(u => u.role === 'user').forEach(user => {
+        for (let i = 13; i >= 0; i--) {
+          const d = new Date(today); d.setDate(d.getDate() - i);
+          if (d.getDay() === 0 || d.getDay() === 6) continue;
+          if (Math.random() < 0.08) continue;
+          const lm = Math.random() < 0.2 ? Math.floor(Math.random() * 40) + 1 : 0;
+          const [h, m] = DB.settings.checkin.split(':').map(Number);
+          const inM = (m + lm) % 60, inH = h + Math.floor((m + lm) / 60);
+          const ci = `${String(inH).padStart(2, '0')}:${String(inM).padStart(2, '0')}`;
+          const isToday = d.toDateString() === today.toDateString();
+          const co = isToday && Math.random() < 0.6 ? null : `${String(h + 8 + Math.floor(Math.random() * 2)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
+          DB.attendance.push({ id: id++, userId: user.id, userName: user.name, userNip: user.nip, userDept: user.dept, date: d.toISOString().split('T')[0], checkin: ci, checkout: co, status: lm > DB.settings.tolerance ? 'telat' : 'hadir', qrToken: 'DEMO', late: lm });
+        }
+      });
+    }
+    genMockData();
+
+    // ═══════════════════════ SESSION ═══════════════════════
+    let CU = null, idleT, warnT;
+    const IDLE_WARN = 5 * 60 * 1000, IDLE_OUT = 6 * 60 * 1000;
+
+    function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      const role = document.getElementById('login-role').value;
+      if (!email || !pass) { notif('error', 'Error', 'Email dan password wajib!'); return; }
+      const user = DB.users.find(u => (u.email === email || u.nip === email) && u.role === role && u.active);
+      if (!user) { notif('error', 'Login Gagal', 'Akun tidak ditemukan atau tidak aktif!'); return; }
+      CU = { ...user };
+      sessionStorage.setItem('qr_session', JSON.stringify({ uid: user.id, role: user.role }));
+      startIdle(); initApp();
+      notif('success', 'Selamat Datang!', `Halo ${user.name} 👋`);
+    }
+
+    function doRegister() {
+      const n = el('reg-name').value.trim(), em = el('reg-email').value.trim();
+      const nip = el('reg-nip').value.trim(), dept = el('reg-dept').value.trim();
+      const pass = el('reg-pass').value;
+      if (!n || !em || !nip || !pass) { notif('error', 'Error', 'Semua field wajib diisi!'); return; }
+      if (pass.length < 8) { notif('error', 'Error', 'Password minimal 8 karakter!'); return; }
+      if (DB.users.find(u => u.email === em || u.nip === nip)) { notif('error', 'Error', 'Email/NIP sudah terdaftar!'); return; }
+      DB.users.push({ id: ++DB.nextId, name: n, email: em, nip, dept, role: 'user', password: 'demo', active: true });
+      notif('success', 'Berhasil', 'Akun berhasil dibuat! Silakan login.');
+      showAuthPage('page-login');
+    }
+
+    function doLogout() {
+      stopCamera(); CU = null;
+      sessionStorage.removeItem('qr_session');
+      clearTimeout(idleT); clearTimeout(warnT);
+      el('app-shell').classList.remove('active'); el('app-shell').style.display = 'none';
+      showAuthPage('page-login');
+      notif('info', 'Logout', 'Anda telah keluar dari sistem.');
+    }
+
+    function startIdle() {
+      const reset = () => {
+        clearTimeout(idleT); clearTimeout(warnT);
+        el('idle-w').style.display = 'none';
+        warnT = setTimeout(() => { el('idle-w').style.display = 'block' }, IDLE_WARN);
+        idleT = setTimeout(() => { notif('warning', 'Auto Logout', 'Sesi berakhir.'); doLogout(); }, IDLE_OUT);
+      };
+      ['mousemove', 'keydown', 'touchstart', 'click'].forEach(e => document.addEventListener(e, reset, { passive: true }));
+      reset();
+    }
+
+    // ═══════════════════════ APP INIT ═══════════════════════
+    function initApp() {
+      el('page-login').style.display = 'none'; el('page-register').style.display = 'none';
+      el('app-shell').classList.add('active'); el('app-shell').style.display = 'flex';
+      if (CU.role === 'admin') {
+        el('sidebar-admin').style.display = 'flex'; el('sidebar-user').style.display = 'none';
+        el('adm-name').textContent = CU.name; el('adm-av').textContent = CU.name[0];
+        initAdminDash(); switchPage('admin-dashboard', null);
+      } else {
+        el('sidebar-user').style.display = 'flex'; el('sidebar-admin').style.display = 'none';
+        el('usr-name').textContent = CU.name; el('usr-av').textContent = CU.name[0];
+        initUserDash(); switchPage('user-dashboard', null);
+      }
+      startClock();
+    }
+
+    // ═══════════════════════ NAVIGATION ═══════════════════════
+    const titles = { 'admin-dashboard': 'Dashboard Admin', 'admin-qr': 'Generate QR Code', 'admin-attendance': 'Data Absensi', 'admin-users': 'Kelola Pengguna', 'admin-report': 'Laporan & Analitik', 'admin-settings': 'Pengaturan', 'user-dashboard': 'Beranda', 'user-scan': 'Scan QR Code', 'user-history': 'Riwayat Absensi', 'user-profile': 'Profil Saya' };
+
+    function switchPage(id, nav) {
+      document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+      const pg = el('page-' + id); if (pg) pg.classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if (nav) nav.classList.add('active');
+      el('topbar-title').textContent = titles[id] || id;
+      closeSidebar();
+      if (id === 'admin-attendance') renderAttTable();
+      if (id === 'admin-users') renderUsrTable();
+      if (id === 'admin-qr') renderQRHist();
+      if (id === 'admin-report') initReport();
+      if (id === 'user-history') renderUserHistory();
+      if (id === 'user-profile') loadProfile();
+      if (id === 'user-scan') initGPS();
+    }
+
+    function showAuthPage(id) {
+      ['page-login', 'page-register'].forEach(p => { el(p).style.display = 'none' });
+      el(id).style.display = 'grid';
+    }
+
+    function toggleSidebar() {
+      const sb = CU?.role === 'admin' ? el('sidebar-admin') : el('sidebar-user');
+      const bd = el('sidebar-backdrop');
+      sb.classList.toggle('open'); bd.classList.toggle('active');
+    }
+    function closeSidebar() {
+      document.querySelectorAll('.sidebar').forEach(s => s.classList.remove('open'));
+      el('sidebar-backdrop').classList.remove('active');
+    }
+
+    // ═══════════════════════ CLOCK ═══════════════════════
+    function startClock() {
+      const tick = () => { el('topbar-clock').textContent = new Date().toLocaleTimeString('id-ID'); };
+      tick(); setInterval(tick, 1000);
+    }
+
+    // ═══════════════════════ ADMIN DASHBOARD ═══════════════════════
+    let cW, cD, cM;
+    function initAdminDash() {
+      const today = new Date().toISOString().split('T')[0];
+      el('today-label').textContent = 'Tanggal: ' + fmtDate(today);
+      const tr = DB.attendance.filter(a => a.date === today);
+      const h = tr.filter(a => a.status === 'hadir').length, t = tr.filter(a => a.status === 'telat').length;
+      const tot = DB.users.filter(u => u.role === 'user' && u.active).length;
+      const al = Math.max(0, tot - h - t);
+      el('s-total').textContent = tot; el('s-hadir').textContent = h; el('s-telat').textContent = t; el('s-alfa').textContent = al;
+      el('absent-badge').textContent = al;
+      renderRecent(tr.slice(0, 8));
+      setTimeout(initCharts, 80);
+    }
+
+    function renderRecent(recs) {
+      const tb = el('recent-tbody');
+      if (!recs.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Belum ada data hari ini</div></div></td></tr>`; return; }
+      tb.innerHTML = recs.map((r, i) => `<tr><td>${i + 1}</td><td><strong>${r.userName}</strong></td><td><code>${r.userNip}</code></td><td>${r.checkin || '-'}</td><td>${r.checkout || '<span class="badge badge-yellow">Belum</span>'}</td><td>${sBadge(r.status)}</td></tr>`).join('');
+    }
+
+    function initCharts() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      Chart.defaults.color = isDark ? '#a09890' : '#6b6560';
+      const days = [], hd = [], td = [], ad = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        if (d.getDay() === 0 || d.getDay() === 6) continue;
+        const ds = d.toISOString().split('T')[0];
+        const recs = DB.attendance.filter(a => a.date === ds);
+        const tot = DB.users.filter(u => u.role === 'user' && u.active).length;
+        days.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }));
+        hd.push(recs.filter(r => r.status === 'hadir').length);
+        td.push(recs.filter(r => r.status === 'telat').length);
+        ad.push(Math.max(0, tot - recs.length));
+      }
+      if (cW) cW.destroy();
+      cW = new Chart(el('chart-weekly').getContext('2d'), { type: 'bar', data: { labels: days, datasets: [{ label: 'Hadir', data: hd, backgroundColor: '#16a34a99', borderColor: '#16a34a', borderWidth: 2, borderRadius: 5 }, { label: 'Telat', data: td, backgroundColor: '#d9770699', borderColor: '#d97706', borderWidth: 2, borderRadius: 5 }, { label: 'Alfa', data: ad, backgroundColor: '#dc262655', borderColor: '#dc2626', borderWidth: 2, borderRadius: 5 }] }, options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
+      const today = new Date().toISOString().split('T')[0];
+      const tr = DB.attendance.filter(a => a.date === today);
+      const h = tr.filter(r => r.status === 'hadir').length, t = tr.filter(r => r.status === 'telat').length;
+      const tot = DB.users.filter(u => u.role === 'user' && u.active).length;
+      if (cD) cD.destroy();
+      cD = new Chart(el('chart-donut').getContext('2d'), { type: 'doughnut', data: { labels: ['Hadir', 'Terlambat', 'Alfa'], datasets: [{ data: [h, t, Math.max(0, tot - h - t)], backgroundColor: ['#16a34a', '#d97706', '#dc2626'], borderWidth: 2 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '62%' } });
+    }
+
+    // ═══════════════════════ QR GENERATE ═══════════════════════
+    let activeQR = null, qrTimer = null;
+
+    function generateQR() {
+      if (qrTimer) clearInterval(qrTimer);
+      const type = el('qr-type').value, dur = parseInt(el('qr-dur').value);
+      const loc = el('qr-loc').value || 'Ruang Utama';
+      const token = 'QR-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+      const now = new Date(), exp = new Date(now.getTime() + dur * 60 * 1000);
+      activeQR = { token, type, location: loc, createdAt: now, expiredAt: exp, scannedBy: [], durationMs: dur * 60 * 1000 };
+      DB.qrCodes.unshift({ ...activeQR, scanCount: 0 });
+      const disp = el('qr-display');
+      disp.innerHTML = ''; disp.style.cssText = 'width:200px;height:200px';
+      new QRCode(disp, { text: JSON.stringify({ token, type, loc, exp: exp.getTime() }), width: 200, height: 200, colorDark: '#1a1814', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+      el('qr-exp-overlay').style.display = 'none';
+      el('btn-dl').style.display = 'inline-flex'; el('btn-fs').style.display = 'inline-flex';
+      el('qr-info-box').style.display = 'block';
+      el('qi-t').textContent = type === 'checkin' ? 'Check-in' : 'Check-out';
+      el('qi-l').textContent = loc; el('qi-e').textContent = exp.toLocaleTimeString('id-ID');
+      el('qr-badge').textContent = '● Aktif'; el('qr-badge').className = 'badge badge-green';
+      el('cr-ring').style.display = 'block';
+      const circ = 2 * Math.PI * 44;
+      const tick = () => {
+        const rem = Math.max(0, exp - new Date()), sec = Math.floor(rem / 1000);
+        const pct = rem / (dur * 60 * 1000);
+        el('cr-n').textContent = sec > 60 ? Math.floor(sec / 60) + 'm' : sec;
+        el('qr-tleft').textContent = `Expired dalam ${sec} detik`;
+        el('ring-c').style.strokeDashoffset = circ * (1 - pct);
+        el('ring-c').style.stroke = pct > .5 ? 'var(--accent)' : pct > .25 ? 'var(--warning)' : 'var(--danger)';
+        el('qr-prog').style.width = (pct * 100) + '%';
+        el('qr-prog').style.background = pct > .5 ? 'var(--accent)' : pct > .25 ? 'var(--warning)' : 'var(--danger)';
+        if (rem <= 0) {
+          clearInterval(qrTimer);
+          el('qr-exp-overlay').style.display = 'flex';
+          el('qr-badge').textContent = '● Expired'; el('qr-badge').className = 'badge badge-red';
+          el('cr-n').textContent = '0';
+          notif('warning', 'QR Expired', 'QR Code telah kedaluwarsa. Generate ulang jika perlu.');
+        }
+      };
+      tick(); qrTimer = setInterval(tick, 1000);
+      notif('success', 'QR Code Dibuat', `Token: ${token.slice(0, 20)}... | Valid ${dur} menit`);
+      renderQRHist();
+    }
+
+    function downloadQR() {
+      const c = document.querySelector('#qr-display canvas'); if (!c) return;
+      const a = document.createElement('a'); a.download = 'QR-Absensi-' + new Date().toISOString().split('T')[0] + '.png';
+      a.href = c.toDataURL(); a.click();
+      notif('success', 'Downloaded', 'QR Code berhasil diunduh!');
+    }
+
+    function showQRFullscreen() {
+      const m = el('qr-fs-modal'), disp = el('qr-fs-display');
+      disp.innerHTML = '';
+      if (activeQR) new QRCode(disp, { text: JSON.stringify({ token: activeQR.token, type: activeQR.type }), width: 280, height: 280, colorDark: '#1a1814', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+      m.classList.add('active');
+    }
+    function closeFS() { el('qr-fs-modal').classList.remove('active'); }
+
+    function renderQRHist() {
+      const tb = el('qr-hist');
+      if (!DB.qrCodes.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📱</div><div class="empty-title">Belum ada QR Code</div></div></td></tr>`; return; }
+      tb.innerHTML = DB.qrCodes.slice(0, 10).map(q => {
+        const exp = new Date(q.expiredAt), expired = exp < new Date();
+        return `<tr><td><code>${q.token.slice(0, 22)}...</code></td><td>${q.type === 'checkin' ? '<span class="badge badge-green">Check-in</span>' : '<span class="badge badge-blue">Check-out</span>'}</td><td>${new Date(q.createdAt).toLocaleString('id-ID')}</td><td>${exp.toLocaleString('id-ID')}</td><td>${q.scannedBy?.length || 0}</td><td>${expired ? '<span class="badge badge-red">Expired</span>' : '<span class="badge badge-green">Aktif</span>'}</td></tr>`;
+      }).join('');
+    }
+
+    // ═══════════════════════ ATTENDANCE TABLE ═══════════════════════
+    function renderAttTable(data) {
+      const recs = (data || DB.attendance).slice().reverse();
+      const tb = el('att-tbody');
+      if (!recs.length) { tb.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Tidak ada data</div></div></td></tr>`; return; }
+      tb.innerHTML = recs.map((r, i) => `<tr><td>${i + 1}</td><td><strong>${r.userName}</strong></td><td><code>${r.userNip}</code></td><td>${r.userDept}</td><td>${fmtDate(r.date)}</td><td>${r.checkin}</td><td>${r.checkout || '<span class="badge badge-yellow">Belum</span>'}</td><td>${calcDur(r.checkin, r.checkout)}</td><td>${sBadge(r.status)}</td><td><button class="btn btn-ghost btn-sm" onclick="editAtt(${r.id})">✏️</button> <button class="btn btn-danger btn-sm" onclick="delAtt(${r.id})">🗑️</button></td></tr>`).join('');
+    }
+
+    function filterTable() {
+      const d = el('f-date').value, s = el('f-search').value.toLowerCase(), st = el('f-status').value;
+      renderAttTable(DB.attendance.filter(r => {
+        if (d && r.date !== d) return false;
+        if (s && !r.userName.toLowerCase().includes(s) && !r.userNip.toLowerCase().includes(s)) return false;
+        if (st && r.status !== st) return false;
+        return true;
+      }));
+    }
+    function clearFilters() { el('f-date').value = ''; el('f-search').value = ''; el('f-status').value = ''; renderAttTable(); }
+
+    function editAtt(id) {
+      const r = DB.attendance.find(a => a.id === id); if (!r) return;
+      el('m-title').textContent = '✏️ Edit Absensi'; el('m-sub').textContent = `${r.userName} — ${fmtDate(r.date)}`;
+      el('m-body').innerHTML = `<div class="form-group"><label class="form-label">Check-in</label><input type="time" class="form-control" id="e-ci" value="${r.checkin || ''}"></div><div class="form-group"><label class="form-label">Check-out</label><input type="time" class="form-control" id="e-co" value="${r.checkout || ''}"></div><div class="form-group"><label class="form-label">Status</label><select class="form-control" id="e-st"><option value="hadir" ${r.status === 'hadir' ? 'selected' : ''}>Hadir</option><option value="telat" ${r.status === 'telat' ? 'selected' : ''}>Terlambat</option><option value="alfa" ${r.status === 'alfa' ? 'selected' : ''}>Alfa</option></select></div>`;
+      el('m-ok').onclick = () => { r.checkin = el('e-ci').value; r.checkout = el('e-co').value; r.status = el('e-st').value; closeModal(); renderAttTable(); notif('success', 'Berhasil', 'Data absensi diperbarui!'); };
+      el('modal-ol').classList.add('active');
+    }
+
+    function delAtt(id) {
+      el('m-title').textContent = '🗑️ Hapus Data'; el('m-sub').textContent = 'Tindakan tidak bisa dibatalkan.';
+      el('m-body').innerHTML = ''; el('m-ok').className = 'btn btn-danger btn-sm'; el('m-ok').textContent = 'Ya, Hapus';
+      el('m-ok').onclick = () => { DB.attendance = DB.attendance.filter(r => r.id !== id); closeModal(); renderAttTable(); notif('success', 'Dihapus', 'Data berhasil dihapus.'); };
+      el('modal-ol').classList.add('active');
+    }
+
+    // ═══════════════════════ USERS TABLE ═══════════════════════
+    function renderUsrTable() {
+      el('usr-tbody').innerHTML = DB.users.map((u, i) => `<tr><td>${i + 1}</td><td><strong>${u.name}</strong></td><td><code>${u.nip}</code></td><td>${u.email}</td><td>${u.dept}</td><td><span class="badge ${u.role === 'admin' ? 'badge-blue' : 'badge-gray'}">${u.role}</span></td><td>${u.active ? '<span class="badge badge-green">Aktif</span>' : '<span class="badge badge-red">Nonaktif</span>'}</td><td><button class="btn btn-ghost btn-sm" onclick="toggleUser(${u.id})">${u.active ? '🔒' : '✅'}</button> <button class="btn btn-danger btn-sm" onclick="delUser(${u.id})">🗑️</button></td></tr>`).join('');
+    }
+    function openAddUser() { el('add-usr-modal').classList.add('active'); }
+    function closeAddUser() { el('add-usr-modal').classList.remove('active'); }
+    function addUser() {
+      const n = el('nu-name').value.trim(), em = el('nu-email').value.trim();
+      const nip = el('nu-nip').value.trim(), dept = el('nu-dept').value.trim();
+      const pass = el('nu-pass').value, role = el('nu-role').value;
+      if (!n || !em || !nip || !pass) { notif('error', 'Error', 'Semua field wajib!'); return; }
+      DB.users.push({ id: ++DB.nextId, name: n, email: em, nip, dept, role, password: 'demo', active: true });
+      closeAddUser(); renderUsrTable();
+      notif('success', 'Berhasil', `${n} berhasil ditambahkan!`);
+    }
+    function toggleUser(id) { const u = DB.users.find(u => u.id === id); if (u) { u.active = !u.active; renderUsrTable(); notif('success', 'Berhasil', `Status ${u.name} diperbarui.`); } }
+    function delUser(id) { if (id === CU.id) { notif('error', 'Error', 'Tidak bisa hapus akun sendiri!'); return; } DB.users = DB.users.filter(u => u.id !== id); renderUsrTable(); notif('success', 'Dihapus', 'Pengguna dihapus.'); }
+
+    // ═══════════════════════ REPORT ═══════════════════════
+    function initReport() {
+      const ms = new Date().toISOString().slice(0, 7);
+      const mr = DB.attendance.filter(a => a.date.startsWith(ms));
+      const td = 22, uc = DB.users.filter(u => u.role === 'user' && u.active).length;
+      const avg = uc ? Math.round((mr.length / (uc * td)) * 100) : 0;
+      const late = mr.filter(r => r.status === 'telat').length;
+      const perf = DB.users.filter(u => u.role === 'user' && u.active).filter(u => { const rr = mr.filter(r => r.userId === u.id); return rr.length >= td && rr.every(r => r.status === 'hadir'); }).length;
+      el('r-avg').textContent = avg + '%'; el('r-late').textContent = late; el('r-perf').textContent = perf;
+      const wks = ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'];
+      const wd = wks.map((_, i) => mr.filter((_, j) => Math.floor(j / 5) === i).length);
+      if (cM) cM.destroy();
+      cM = new Chart(el('chart-monthly').getContext('2d'), { type: 'line', data: { labels: wks, datasets: [{ label: 'Kehadiran', data: wd, fill: true, tension: .4, backgroundColor: 'rgba(45,91,227,.1)', borderColor: 'var(--accent)', borderWidth: 2, pointRadius: 5 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+      const us = DB.users.filter(u => u.role === 'user' && u.active).map(u => ({ name: u.name, dept: u.dept, cnt: mr.filter(r => r.userId === u.id).length, pct: Math.round((mr.filter(r => r.userId === u.id).length / td) * 100) })).sort((a, b) => b.cnt - a.cnt).slice(0, 5);
+      el('top-list').innerHTML = us.map((u, i) => `<div class="flex ai-c g3 mb1"><div style="width:28px;height:28px;border-radius:50%;background:var(--accent-light);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${i + 1}</div><div style="flex:1"><div class="fw7 ts">${u.name}</div><div class="txs tc">${u.dept}</div><div class="progress-bar"><div class="progress-fill" style="width:${u.pct}%"></div></div></div><div class="fw7" style="color:var(--accent)">${u.pct}%</div></div>`).join('');
+    }
+
+    // ═══════════════════════ EXPORT ═══════════════════════
+    function exportPDF() {
+      const { jsPDF } = window.jspdf; const doc = new jsPDF();
+      doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+      doc.text('Laporan Absensi — AbsensiQR', 20, 18);
+      doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+      doc.text('Dicetak: ' + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), 20, 27);
+      let y = 42;
+      doc.setFont('helvetica', 'bold');
+      ['No', 'Nama', 'NIP', 'Tanggal', 'Check-in', 'Check-out', 'Status'].forEach((h, i) => doc.text(h, [14, 25, 55, 80, 110, 135, 162][i], y));
+      doc.line(14, y + 2, 196, y + 2); y += 8; doc.setFont('helvetica', 'normal');
+      DB.attendance.slice(0, 35).forEach((r, i) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        [String(i + 1), r.userName.substring(0, 18), r.userNip, r.date, r.checkin, r.checkout || '-', r.status].forEach((v, j) => doc.text(v, [14, 25, 55, 80, 110, 135, 162][j], y));
+        y += 7;
+      });
+      doc.save('Absensi-' + new Date().toISOString().split('T')[0] + '.pdf');
+      notif('success', 'Export PDF', 'File PDF berhasil diunduh!');
+    }
+
+    function exportExcel() {
+      const rows = [['No', 'Nama', 'NIP', 'Departemen', 'Tanggal', 'Check-in', 'Check-out', 'Status']];
+      DB.attendance.forEach((r, i) => rows.push([i + 1, r.userName, r.userNip, r.userDept, r.date, r.checkin, r.checkout || '', r.status]));
+      const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'Absensi-' + new Date().toISOString().split('T')[0] + '.csv'; a.click();
+      notif('success', 'Export CSV', 'File CSV berhasil diunduh!');
+    }
+
+    // ═══════════════════════ SETTINGS ═══════════════════════
+    function saveSettings() {
+      DB.settings.checkin = el('set-ci').value; DB.settings.checkout = el('set-co').value;
+      DB.settings.tolerance = parseInt(el('set-tol').value); DB.settings.gps = el('set-gps').value;
+      DB.settings.radius = parseInt(el('set-rad').value);
+      notif('success', 'Disimpan', 'Pengaturan berhasil diperbarui!');
+    }
+
+    // ═══════════════════════ USER DASHBOARD ═══════════════════════
+    function initUserDash() {
+      const today = new Date().toISOString().split('T')[0];
+      const ur = DB.attendance.filter(r => r.userId === CU.id);
+      const tr = ur.find(r => r.date === today);
+      const h = ur.filter(r => r.status === 'hadir').length, t = ur.filter(r => r.status === 'telat').length;
+      const pct = ur.length ? Math.round(((h + t) / Math.max(ur.length, 1)) * 100) : 0;
+      el('u-pname').textContent = CU.name; el('u-pdept').textContent = CU.dept;
+      el('u-big-av').textContent = CU.name[0];
+      el('u-s-h').textContent = h; el('u-s-t').textContent = t; el('u-s-p').textContent = pct + '%';
+      el('u-ci').textContent = tr?.checkin || '--:--'; el('u-co').textContent = tr?.checkout || 'Belum';
+      if (tr) {
+        el('u-st-icon').textContent = tr.status === 'hadir' ? '✅' : '⏰';
+        el('u-st-text').textContent = tr.status === 'hadir' ? 'Hadir Tepat Waktu' : 'Terlambat';
+        el('u-st-sub').textContent = `Check-in: ${tr.checkin} | Status: ${tr.status.toUpperCase()}`;
+        el('u-status-card').style.borderColor = tr.status === 'hadir' ? 'var(--success)' : 'var(--warning)';
+      }
+      const tb = el('u-recent'), rec = ur.slice(-5).reverse();
+      if (!rec.length) { tb.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Belum ada data</div></div></td></tr>`; return; }
+      tb.innerHTML = rec.map(r => `<tr><td>${fmtDate(r.date)}</td><td>${r.checkin}</td><td>${r.checkout || '<span class="badge badge-yellow">Belum</span>'}</td><td>${calcDur(r.checkin, r.checkout)}</td><td>${sBadge(r.status)}</td></tr>`).join('');
+    }
+
+    function renderUserHistory() {
+      const fm = el('u-f-month').value;
+      const recs = DB.attendance.filter(r => r.userId === CU.id && (!fm || r.date.startsWith(fm))).sort((a, b) => b.date.localeCompare(a.date));
+      const tb = el('u-hist-tbody');
+      if (!recs.length) { tb.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Tidak ada data</div></div></td></tr>`; return; }
+      tb.innerHTML = recs.map((r, i) => `<tr><td>${i + 1}</td><td>${fmtDate(r.date)}</td><td>${getDayName(r.date)}</td><td>${r.checkin}</td><td>${r.checkout || '<span class="badge badge-yellow">Belum</span>'}</td><td>${calcDur(r.checkin, r.checkout)}</td><td>${sBadge(r.status)}</td></tr>`).join('');
+    }
+
+    // ═══════════════════════ CAMERA SCAN ═══════════════════════
+    let camStream = null, scanLoop = null;
+
+    function startCamera() {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } })
+        .then(stream => {
+          camStream = stream;
+          const v = el('scan-video'); v.srcObject = stream;
+          el('scan-video-wrap').style.display = 'block'; el('scan-ph').style.display = 'none';
+          el('btn-stop').style.display = 'block';
+          startScanLoop(); notif('info', 'Kamera Aktif', 'Arahkan ke QR Code');
+        }).catch(err => notif('error', 'Kamera Error', err.message));
+    }
+
+    function stopCamera() {
+      if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+      clearInterval(scanLoop);
+      const vw = el('scan-video-wrap'); if (vw) vw.style.display = 'none';
+      const ph = el('scan-ph'); if (ph) ph.style.display = 'block';
+      const bs = el('btn-stop'); if (bs) bs.style.display = 'none';
+    }
+
+    function startScanLoop() {
+      const v = el('scan-video'), c = el('scan-canvas'), ctx = c.getContext('2d');
+      scanLoop = setInterval(() => {
+        if (v.readyState !== v.HAVE_ENOUGH_DATA) return;
+        c.width = v.videoWidth; c.height = v.videoHeight;
+        ctx.drawImage(v, 0, 0, c.width, c.height);
+        const img = ctx.getImageData(0, 0, c.width, c.height);
+        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if (code) processQR(code.data);
+      }, 200);
+    }
+
+    function processQR(raw) {
+      clearInterval(scanLoop); stopCamera();
+      let d; try { d = JSON.parse(raw); } catch { showScanRes('error', '❌', 'QR Tidak Valid', 'Format QR tidak dikenali.'); return; }
+      const now = new Date(), today = now.toISOString().split('T')[0];
+      const qr = DB.qrCodes.find(q => q.token === d.token);
+      if (!qr) { showScanRes('error', '❌', 'QR Tidak Ditemukan', 'Token tidak terdaftar di sistem.'); return; }
+      if (now > new Date(qr.expiredAt)) { showScanRes('error', '⏰', 'QR Expired', `Expired: ${new Date(qr.expiredAt).toLocaleTimeString('id-ID')}`); return; }
+      if (qr.scannedBy?.includes(CU.id)) { showScanRes('error', '🚫', 'Sudah Scan', 'Anda sudah menggunakan QR Code ini.'); return; }
+      const tr = DB.attendance.find(r => r.userId === CU.id && r.date === today);
+      if (qr.type === 'checkin' && tr?.checkin) { showScanRes('error', '🚫', 'Sudah Check-in', `Check-in pukul ${tr.checkin}`); return; }
+      if (qr.type === 'checkout' && !tr?.checkin) { showScanRes('error', '⚠️', 'Belum Check-in', 'Lakukan check-in terlebih dahulu!'); return; }
+      if (qr.type === 'checkout' && tr?.checkout) { showScanRes('error', '🚫', 'Sudah Check-out', `Check-out pukul ${tr.checkout}`); return; }
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const [sh, sm] = DB.settings.checkin.split(':').map(Number);
+      const [nh, nm] = timeStr.split(':').map(Number);
+      const lm = (nh * 60 + nm) - (sh * 60 + sm), status = lm > DB.settings.tolerance ? 'telat' : 'hadir';
+      if (qr.type === 'checkin') {
+        if (tr) { tr.checkin = timeStr; tr.status = status; }
+        else DB.attendance.push({ id: ++DB.nextId, userId: CU.id, userName: CU.name, userNip: CU.nip, userDept: CU.dept, date: today, checkin: timeStr, checkout: null, status, qrToken: qr.token, late: lm > 0 ? lm : 0 });
+        showScanRes(status === 'hadir' ? 'success' : 'warning', status === 'hadir' ? '✅' : '⏰', status === 'hadir' ? 'Check-in Berhasil!' : 'Terlambat!', status === 'hadir' ? `Hadir tepat waktu pukul ${timeStr}` : `Terlambat ${lm} menit`);
+      } else {
+        if (tr) { tr.checkout = timeStr; showScanRes('success', '🏁', 'Check-out Berhasil!', `Sampai jumpa! Tercatat pukul ${timeStr}`); }
+      }
+      if (!qr.scannedBy) qr.scannedBy = [];
+      qr.scannedBy.push(CU.id);
+      initUserDash(); initAdminDash();
+    }
+
+    function showScanRes(type, icon, title, msg) {
+      const res = el('scan-res'), card = el('scan-res-card');
+      const cols = { success: 'var(--success)', error: 'var(--danger)', warning: 'var(--warning)' };
+      el('sr-icon').textContent = icon; el('sr-title').textContent = title;
+      el('sr-msg').textContent = msg; el('sr-time').textContent = new Date().toLocaleTimeString('id-ID');
+      card.style.borderColor = cols[type]; res.style.display = 'block';
+      notif(type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'error', title, msg);
+      setTimeout(() => { res.style.display = 'none' }, 8000);
+    }
+
+    // ═══════════════════════ GPS ═══════════════════════
+    function initGPS() {
+      if (!navigator.geolocation) { updGPS('fail', 'GPS tidak tersedia'); return; }
+      updGPS('checking', 'Memeriksa lokasi GPS...');
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const d = calcDist(pos.coords.latitude, pos.coords.longitude, DB.settings.lat, DB.settings.lng);
+          if (DB.settings.gps === 'off') updGPS('ok', 'Validasi GPS dinonaktifkan (Mode Demo)');
+          else if (d <= DB.settings.radius) updGPS('ok', `Lokasi valid — ${Math.round(d)}m dari titik absensi`);
+          else updGPS('fail', `Di luar radius! ${Math.round(d)}m (maks ${DB.settings.radius}m)`);
+        },
+        () => updGPS('fail', 'Tidak dapat mengambil lokasi'),
+        { timeout: 8000 }
+      );
+    }
+
+    function updGPS(state, msg) {
+      const b = el('gps-st'), t = el('gps-txt');
+      b.className = `gps-status gps-${state}`;
+      t.textContent = msg;
+      b.style.background = state === 'ok' ? 'var(--success-light)' : state === 'fail' ? 'var(--danger-light)' : 'var(--surface2)';
+      b.style.borderColor = state === 'ok' ? 'var(--success)' : state === 'fail' ? 'var(--danger)' : 'var(--border)';
+    }
+
+    function calcDist(la1, lo1, la2, lo2) {
+      const R = 6371e3, p1 = la1 * Math.PI / 180, p2 = la2 * Math.PI / 180;
+      const dp = (la2 - la1) * Math.PI / 180, dl = (lo2 - lo1) * Math.PI / 180;
+      const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // ═══════════════════════ PROFILE ═══════════════════════
+    function loadProfile() { el('pf-name').value = CU.name; el('pf-email').value = CU.email; el('pf-nip').value = CU.nip; el('pf-dept').value = CU.dept; }
+    function saveProfile() {
+      const n = el('pf-name').value.trim(), em = el('pf-email').value.trim(), dept = el('pf-dept').value.trim();
+      if (!n || !em) { notif('error', 'Error', 'Nama dan email wajib!'); return; }
+      const u = DB.users.find(u => u.id === CU.id);
+      if (u) { u.name = n; u.email = em; u.dept = dept; CU.name = n; CU.email = em; CU.dept = dept; el('usr-name').textContent = n; notif('success', 'Berhasil', 'Profil diperbarui!'); }
+    }
+    function changePass() {
+      const op = el('pf-op').value, np = el('pf-np').value;
+      if (!op || !np) { notif('error', 'Error', 'Semua field wajib!'); return; }
+      if (np.length < 8) { notif('error', 'Error', 'Min. 8 karakter!'); return; }
+      notif('success', 'Berhasil', 'Password berhasil diubah! (Demo)');
+      el('pf-op').value = ''; el('pf-np').value = '';
+    }
+
+    // ═══════════════════════ THEME ═══════════════════════
+    function toggleTheme() {
+      const html = document.documentElement, isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      el('topbar-clock').parentElement.querySelector('.theme-toggle').textContent = isDark ? '🌙' : '☀️';
+      setTimeout(initCharts, 80);
+      notif('info', isDark ? 'Light Mode' : 'Dark Mode', 'Tema berhasil diganti!');
+    }
+
+    // ═══════════════════════ NOTIFICATIONS ═══════════════════════
+    function notif(type, title, msg) {
+      const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+      const c = el('notif-c'), n = document.createElement('div');
+      n.className = `notif ${type}`;
+      n.innerHTML = `<div class="notif-icon">${icons[type] || 'ℹ️'}</div><div><div class="notif-title">${title}</div><div class="notif-msg">${msg}</div></div>`;
+      c.appendChild(n);
+      setTimeout(() => { n.style.animation = 'slideOut .3s ease forwards'; setTimeout(() => n.remove(), 300); }, 4000);
+    }
+
+    // ═══════════════════════ MODAL ═══════════════════════
+    function closeModalOL(e) { if (e.target === el('modal-ol')) closeModal(); }
+    function closeModal() {
+      el('modal-ol').classList.remove('active');
+      el('m-ok').className = 'btn btn-primary btn-sm';
+      el('m-ok').textContent = 'Konfirmasi';
+    }
+
+    // ═══════════════════════ UTILITIES ═══════════════════════
+    const el = id => document.getElementById(id);
+    function fmtDate(s) { return new Date(s).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }); }
+    function getDayName(s) { return new Date(s).toLocaleDateString('id-ID', { weekday: 'long' }); }
+    function calcDur(ci, co) {
+      if (!ci || !co) return '-';
+      const [h1, m1] = ci.split(':').map(Number), [h2, m2] = co.split(':').map(Number);
+      const d = (h2 * 60 + m2) - (h1 * 60 + m1); if (d <= 0) return '-';
+      return Math.floor(d / 60) > 0 ? `${Math.floor(d / 60)}j ${d % 60}m` : `${d % 60}m`;
+    }
+    function sBadge(s) { return { hadir: '<span class="badge badge-green">✅ Hadir</span>', telat: '<span class="badge badge-yellow">⏰ Terlambat</span>', alfa: '<span class="badge badge-red">❌ Alfa</span>' }[s] || `<span class="badge badge-gray">${s}</span>`; }
+
+    // ═══════════════════════ DEMO QR FOR TESTING ═══════════════════════
+    (function () {
+      const now = new Date(), exp = new Date(now.getTime() + 3600 * 1000);
+      DB.qrCodes.push({ token: 'QR-DEMO2024-TESTXYZ', type: 'checkin', location: 'Demo Room', createdAt: now, expiredAt: exp, scannedBy: [], durationMs: 3600000 });
+    })();
+
+    // ═══════════════════════ INIT ═══════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = sessionStorage.getItem('qr_session');
+      if (s) { const { uid } = JSON.parse(s); const u = DB.users.find(u => u.id === uid); if (u) { CU = { ...u }; startIdle(); initApp(); return; } }
+      showAuthPage('page-login');
+    });
+  </script>
+</body>
+
+</html>
