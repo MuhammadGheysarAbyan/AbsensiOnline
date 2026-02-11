@@ -3265,9 +3265,6 @@
           DB.attendance.push({ id: id++, userId: user.id, userName: user.name, userNip: user.nip, userDept: user.dept, date: d.toISOString().split('T')[0], checkin: ci, checkout: co, status: lm > DB.settings.tolerance ? 'telat' : 'hadir', qrToken: 'DEMO', late: lm });
         }
       });
-      DB.notifications = [{ id: 1, title: 'Selamat Datang', msg: 'Sistem siap digunakan', time: 'Baru saja', read: false, type: 'green' }, { id: 2, title: 'Update Sistem', msg: 'Versi 2.0 telah dirilis', time: '1 jam lalu', read: false, type: 'blue' }, { id: 3, title: 'Peringatan', msg: 'Cek koneksi internet Anda', time: '3 jam lalu', read: true, type: 'yellow' }];
-      DB.activities = [{ id: 1, user: 'Administrator', action: 'Generate QR Code', time: '2 menit lalu', type: 'blue' }, { id: 2, user: 'Budi Santoso', action: 'Check-in Kehadiran', time: '15 menit lalu', type: 'green' }, { id: 3, user: 'Siti Rahma', action: 'Check-in Kehadiran', time: '18 menit lalu', type: 'green' }, { id: 4, user: 'Dewi Kusuma', action: 'Gagal Scan QR', time: '30 menit lalu', type: 'red' }, { id: 5, user: 'Administrator', action: 'Login ke sistem', time: '1 jam lalu', type: 'blue' }];
-      DB.achievements = [{ id: 1, name: 'First Step', desc: 'Melakukan absensi pertama kali', icon: '🎉', unlocked: true }, { id: 2, name: 'Early Bird', desc: 'Check-in sebelum jam 07:00', icon: 'wb_sunny', unlocked: false }, { id: 3, name: 'Perfect Week', desc: 'Hadir penuh selama 1 minggu', icon: 'star', unlocked: false }, { id: 4, name: 'On Time Champion', desc: 'Tidak pernah terlambat sebulan', icon: 'trophy', unlocked: false }, { id: 5, name: 'Tech Savvy', desc: 'Login menggunakan 3 device berbeda', icon: 'devices', unlocked: true }];
     }
     genMockData();
 
@@ -3324,7 +3321,6 @@
     function initApp() {
       el('page-login').style.display = 'none'; el('page-register').style.display = 'none';
       el('app-shell').classList.add('active'); el('app-shell').style.display = 'flex';
-      setupFAB();
       if (CU.role === 'admin') {
         el('sidebar-admin').style.display = 'flex'; el('sidebar-user').style.display = 'none';
         el('adm-name').textContent = CU.name; el('adm-av').textContent = CU.name[0];
@@ -3389,12 +3385,7 @@
       el('s-total').textContent = tot; el('s-hadir').textContent = h; el('s-telat').textContent = t; el('s-alfa').textContent = al;
       el('absent-badge').textContent = al;
       renderRecent(tr.slice(0, 8));
-      renderHeatmap(); renderTimeline();
-      updateNotifBadge();
       setTimeout(initCharts, 80);
-      animateValue('s-total', 0, tot, 1000); animateValue('s-hadir', 0, h, 1000);
-      animateValue('s-telat', 0, t, 1000); animateValue('s-alfa', 0, al, 1000);
-      el('fab-container').style.display = 'flex';
     }
 
     function renderRecent(recs) {
@@ -3623,7 +3614,6 @@
       const tb = el('u-recent'), rec = ur.slice(-5).reverse();
       if (!rec.length) { tb.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Belum ada data</div></div></td></tr>`; return; }
       tb.innerHTML = rec.map(r => `<tr><td>${fmtDate(r.date)}</td><td>${r.checkin}</td><td>${r.checkout || '<span class="badge badge-yellow">Belum</span>'}</td><td>${calcDur(r.checkin, r.checkout)}</td><td>${sBadge(r.status)}</td></tr>`).join('');
-      renderAchievements(); el('fab-container').style.display = 'flex';
     }
 
     function renderUserHistory() {
@@ -3797,24 +3787,6 @@
       const now = new Date(), exp = new Date(now.getTime() + 3600 * 1000);
       DB.qrCodes.push({ token: 'QR-DEMO2024-TESTXYZ', type: 'checkin', location: 'Demo Room', createdAt: now, expiredAt: exp, scannedBy: [], durationMs: 3600000 });
     })();
-
-    // ═══════════════════════ ENHANCEMENTS ═══════════════════════
-    function animateValue(id, start, end, duration) { const obj = el(id); let startTimestamp = null; const step = (timestamp) => { if (!startTimestamp) startTimestamp = timestamp; const progress = Math.min((timestamp - startTimestamp) / duration, 1); obj.innerHTML = Math.floor(progress * (end - start) + start); if (progress < 1) window.requestAnimationFrame(step); }; window.requestAnimationFrame(step); }
-    function renderHeatmap() { const c = el('heatmap-wrap'); if (!c) return; c.innerHTML = ''; const days = 30; for (let i = 0; i < 5; i++) { const row = document.createElement('div'); row.className = 'heatmap-row'; for (let j = 0; j < 7; j++) { const d = new Date(); d.setDate(d.getDate() - (days - (i * 7 + j))); const ds = d.toISOString().split('T')[0]; const count = DB.attendance.filter(a => a.date === ds && a.status === 'hadir').length; const level = count > 15 ? 'l4' : count > 10 ? 'l3' : count > 5 ? 'l2' : count > 0 ? 'l1' : ''; const cell = document.createElement('div'); cell.className = `heatmap-cell ${level}`; cell.innerHTML = `<div class="heatmap-tooltip">${fmtDate(ds)}: ${count} Hadir</div>`; row.appendChild(cell); } c.appendChild(row); } }
-    function renderTimeline() { const c = el('activity-timeline'); if (!c) return; c.innerHTML = ''; (DB.activities || []).slice(0, 10).forEach(a => { const item = document.createElement('div'); item.className = 'tl-item'; item.innerHTML = `<div class="tl-dot ${a.type}">${a.type === 'green' ? '✔' : a.type === 'red' ? '✖' : a.type === 'blue' ? 'ℹ' : '⚠'}</div><div class="tl-content"><strong>${a.user}</strong><span>${a.action}</span><div class="tl-time">${a.time}</div></div>`; c.appendChild(item); }); }
-    function toggleNotifPanel() { el('notif-panel').classList.toggle('open'); renderNotifPanel(); }
-    function renderNotifPanel() { const c = el('notif-panel-body'); c.innerHTML = ''; if (!(DB.notifications || []).length) { c.innerHTML = '<div class="cmd-empty">Belum ada notifikasi</div>'; return; } DB.notifications.forEach(n => { const item = document.createElement('div'); item.className = 'notif-panel-item'; item.innerHTML = `<div class="notif-panel-icon ${n.type}">${n.type === 'green' ? '✅' : n.type === 'blue' ? 'ℹ' : '⚠️'}</div><div class="notif-panel-text"><strong>${n.title}</strong><span>${n.msg}</span></div><div class="notif-panel-time">${n.time}</div>`; c.appendChild(item); }); }
-    function updateNotifBadge() { const u = (DB.notifications || []).filter(n => !n.read).length; el('notif-bell-count').textContent = u; el('notif-bell-count').style.display = u ? 'flex' : 'none'; }
-    function clearNotifPanel(e) { e.stopPropagation(); DB.notifications = []; renderNotifPanel(); updateNotifBadge(); }
-    function renderAchievements() { const c = el('achievements-grid'); if (!c) return; c.innerHTML = ''; (DB.achievements || []).forEach(a => { c.innerHTML += `<div class="achievement ${a.unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon material-icons">${a.icon}</span><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>`; }); }
-    function toggleFAB() { el('fab-main').classList.toggle('open'); el('fab-actions').classList.toggle('open'); }
-    function setupFAB() { const c = el('fab-actions'); c.innerHTML = ''; if (CU.role === 'admin') { c.innerHTML = `<div class="fab-action" onclick="generateQR();toggleFAB()"><div class="fab-action-label">Generate QR</div><div class="fab-action-btn">📱</div></div><div class="fab-action" onclick="exportPDF();toggleFAB()"><div class="fab-action-label">Export PDF</div><div class="fab-action-btn">📄</div></div><div class="fab-action" onclick="openAddUser();toggleFAB()"><div class="fab-action-label">Add User</div><div class="fab-action-btn">👤</div></div>`; } else { c.innerHTML = `<div class="fab-action" onclick="switchPage('user-scan',null);toggleFAB()"><div class="fab-action-label">Scan QR</div><div class="fab-action-btn">📸</div></div><div class="fab-action" onclick="switchPage('user-history',null);toggleFAB()"><div class="fab-action-label">History</div><div class="fab-action-btn">📅</div></div>`; } }
-    function openCmdPalette() { el('cmd-overlay').classList.add('active'); el('cmd-input').focus(); filterCmd(); }
-    function closeCmdPalette() { el('cmd-overlay').classList.remove('active'); el('cmd-input').value = ''; }
-    function cmdKeyDown(e) { if (e.key === 'Escape') closeCmdPalette(); if (e.key === 'Enter') { const f = document.querySelector('.cmd-item'); if (f) f.click(); } }
-    document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openCmdPalette(); } });
-    function filterCmd() { const q = el('cmd-input').value.toLowerCase(), c = el('cmd-results'); c.innerHTML = ''; const cmds = [{ txt: 'Dashboard', icon: '📊', act: () => { switchPage(CU.role === 'admin' ? 'admin-dashboard' : 'user-dashboard', null) } }, { txt: 'Logout', icon: '🚪', act: doLogout }, { txt: 'Dark Mode Toggle', icon: '🌙', act: toggleTheme }]; if (CU.role === 'admin') { cmds.push({ txt: 'Generate QR', icon: '📱', act: () => { switchPage('admin-qr', null) } }, { txt: 'Data Absensi', icon: '📋', act: () => { switchPage('admin-attendance', null) } }, { txt: 'Kelola User', icon: '👥', act: () => { switchPage('admin-users', null) } }); } else { cmds.push({ txt: 'Scan QR', icon: '📸', act: () => { switchPage('user-scan', null) } }, { txt: 'Riwayat Saya', icon: '📅', act: () => { switchPage('user-history', null) } }); } const res = cmds.filter(x => x.txt.toLowerCase().includes(q)); if (!res.length) { c.innerHTML = '<div class="cmd-empty">Tidak ada hasil</div>'; return; } res.forEach(r => { const d = document.createElement('div'); d.className = 'cmd-item'; d.innerHTML = `<div class="cmd-item-icon">${r.icon}</div><div class="cmd-item-text">${r.txt}</div><div class="cmd-item-short">↵</div>`; d.onclick = () => { r.act(); closeCmdPalette(); }; c.appendChild(d); }); }
-    document.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b) { const r = document.createElement('span'); r.classList.add('ripple'); const rect = b.getBoundingClientRect(); const size = Math.max(rect.width, rect.height); r.style.width = r.style.height = `${size}px`; r.style.left = `${e.clientX - rect.left - size / 2}px`; r.style.top = `${e.clientY - rect.top - size / 2}px`; b.appendChild(r); setTimeout(() => r.remove(), 600); } });
 
     // ═══════════════════════ INIT ═══════════════════════
     document.addEventListener('DOMContentLoaded', () => {
